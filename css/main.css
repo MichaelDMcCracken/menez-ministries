@@ -30,10 +30,10 @@ main {
     /* display: flex; */
     /* flex-wrap: wrap; */
     display: grid;
-    grid-template-columns: repeat(5, 10rem);
+    grid-template-columns: repeat(3, 10rem);
     /* This would display the children elements in  three equal columns with equal width */
     gap: 5px;
-    /* To set a gap between  thegrid items */
+    justify-content: center;
 }
 
 .gr {
@@ -41,4 +41,29 @@ main {
     /* background-color÷: #0000FF; */
     /* border: 1px sol÷id #ffff; */
     /* I added a border all round each column for better visibility and separation of the columns */
+}
+
+a {
+    color: #1a1a1a;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #1a1a1a;
+}
+
+a:hover {
+    color: #7a3d2d;
+}
+
+th,
+td {
+    padding: 0.5rem 5rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+iframe {
+    width: 50%;
+    margin-top: 1rem;
 }
