@@ -14,7 +14,7 @@ h2 {
     font-family: 'Lexend', 'Arial', sans-serif
 }
 
-@media screen and (min-width: 700px) {
+@media screen and (min-width: 1200px) {
     hr {
             width: 5rem;
             margin-top: 0.5rem;
@@ -70,7 +70,7 @@ h2 {
     }
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 1200px) {
     hr {
             width: 5rem;
             margin-top: 0.5rem;
