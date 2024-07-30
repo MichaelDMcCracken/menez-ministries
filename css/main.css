@@ -9,6 +9,11 @@ h1 {
     margin-bottom: 1rem;
 }
 
+.recent-label {
+    text-align: left;
+    color: #d4a388;
+}
+
 .recent {
     /* background-color: #7a3d2d; */
     /* background-color: #CDD7B2; */
@@ -16,9 +21,9 @@ h1 {
     /* color: #7a3d2d; */
     margin-left: auto;
     margin-right: auto;
-    border-radius: 15rem;
-    padding-left: 4rem;
-    padding-right: 1.5rem;
+    border-radius: 1rem;
+    padding-left: 1.5rem;
+    padding-right: 1rem;
     padding-bottom: 1rem;
     padding-top: 1rem;
     background: rgb(212, 174, 136);
@@ -36,7 +41,7 @@ h1 {
 }
 
 .recent-title {
-    padding-right: 1.5rem;
+    padding-right: 1rem;
     font-size: 1.4rem;
     letter-spacing: 0.05rem;
     font-weight: 600;
@@ -48,18 +53,19 @@ h1 {
     color: #fff;
     text-align: left;
     font-weight: 300;
-    letter-spacing: 0.15rem;
+    letter-spacing: 0.1rem;
 }
 
 .recent-date {
     font-weight: 600;
-    border-radius: 15rem;
+    border-radius: 1rem;
     color: #FFF;
     align-items: center;
     display: grid;
     letter-spacing: 0.05rem;
     font-size: 1.2em;
     background-color: #1a1a1a;
+    min-width: 6rem;
 }
 
 
