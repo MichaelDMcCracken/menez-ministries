@@ -12,6 +12,7 @@ h1 {
 .recent-label {
     text-align: left;
     color: #d4a388;
+    text-transform: uppercase;
 }
 
 .recent {
@@ -26,17 +27,19 @@ h1 {
     padding-right: 1rem;
     padding-bottom: 1rem;
     padding-top: 1rem;
-    background: rgb(212, 174, 136);
-    background: linear-gradient(-90deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%);
+    background: #7a3d2d;
+    background: linear-gradient(-120deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%);
     box-shadow: #1a1a1a;
     display: grid;
     grid-template-columns: 7fr 1fr;
     margin-bottom: 0.5rem;
+    /* min-width: 60%; */
 }
 
 .recent:hover {
     background: rgb(212, 174, 136);
-    background: linear-gradient(-90deg, #ccc 0%, #333 100%);
+    background: linear-gradient(90deg, #1a1a1a 0%, #6a6a6a 100%);
+    /* background: linear-gradient(180deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%); */
     /* box-shadow: #1a1a1a 10px 0px 0px; */
 }
 
@@ -158,6 +161,10 @@ a:hover {
             margin: 2rem 3rem 3rem 3rem;
             text-align: center;
         }
+
+                .recent-title {
+                    font-size: 1.2rem;
+                }
 
         .fl {
             /* display: block; */
