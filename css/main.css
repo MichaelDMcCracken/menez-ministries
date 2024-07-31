@@ -20,6 +20,7 @@ h1 {
     /* background-color: #CDD7B2; */
     /* background-color: #efefef; */
     /* color: #7a3d2d; */
+    margin-top: 0rem;
     margin-left: auto;
     margin-right: auto;
     border-radius: 1rem;
@@ -37,8 +38,8 @@ h1 {
 }
 
 .recent:hover {
-    background: rgb(212, 174, 136);
-    background: linear-gradient(90deg, #1a1a1a 0%, #6a6a6a 100%);
+    background: #695E3F;
+    background: linear-gradient(90deg, #7A3D2D 0%, #FBFBE3 100%);
     /* background: linear-gradient(180deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%); */
     /* box-shadow: #1a1a1a 10px 0px 0px; */
 }
@@ -69,6 +70,7 @@ h1 {
     font-size: 1.2em;
     background-color: #1a1a1a;
     min-width: 6rem;
+    text-align: center;
 }
 
 
@@ -115,7 +117,7 @@ a:hover {
     }
     
     main {
-        margin: 2rem 3rem 3rem 3rem;
+        margin: 1rem 3rem 3rem 3rem;
         text-align: center;
     }
 
@@ -162,9 +164,14 @@ a:hover {
             text-align: center;
         }
 
-                .recent-title {
-                    font-size: 1.2rem;
-                }
+        .recent-title {
+            font-size: 1.2rem;
+        }
+
+        .recent {
+            margin-left: 1rem;
+            margin-right: 1rem;
+        }
 
         .fl {
             /* display: block; */
