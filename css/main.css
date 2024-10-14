@@ -9,6 +9,10 @@ h1 {
     margin-bottom: 1rem;
 }
 
+main {
+    min-height: 55vh;
+}
+
 .recent-label {
     text-align: left;
     color: #d4a388;
@@ -103,6 +107,15 @@ a:visited {
 
 a:hover {
     color: #d4a388;
+}
+
+footer {
+    width: 100%;
+    background-color: #fafafa;
+    text-align: center;
+    padding: 1rem;
+    color: #aaa;
+    font-size: 0.9rem;
 }
 
 @media (min-width: 1000px) {
