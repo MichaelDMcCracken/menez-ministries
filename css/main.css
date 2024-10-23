@@ -4,13 +4,48 @@ html, body {
     font-family: 'lexend';
 }
 
+.banner {
+    text-align: center;
+    padding: 5rem;
+    color: #fff;
+    background-image: url(../img/frm-cover.jpg);
+    background-size: cover;
+    background-position: 50% 38%;
+}
+
+.banner h1 {
+    font-family: 'Campaign-Slab', 'Courier New', monospace;
+    font-size: 3.5rem;
+    margin: 0;
+}
+
+.banner h3 {
+    font-weight: 200;
+    font-size: 2rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    letter-spacing: 0.15rem;
+}
+
 h1 {
     font-family: 'Campaign-Slab', 'Courier New', monospace;
     margin-bottom: 1rem;
 }
 
+h2 {
+    padding-bottom: 0.5rem;
+    font-family: 'Lexend', 'Arial', sans-serif
+}
+
+h3 {
+    font-weight: 200;
+    font-size: 1.2rem;
+    margin-top: -0.5rem;
+    letter-spacing: 0.15rem;
+}
+
 main {
-    min-height: 55vh;
+    min-height: 60vh;
 }
 
 .recent-label {
@@ -20,10 +55,6 @@ main {
 }
 
 .recent {
-    /* background-color: #7a3d2d; */
-    /* background-color: #CDD7B2; */
-    /* background-color: #efefef; */
-    /* color: #7a3d2d; */
     margin-top: 0rem;
     margin-left: auto;
     margin-right: auto;
@@ -38,14 +69,11 @@ main {
     display: grid;
     grid-template-columns: 7fr 1fr;
     margin-bottom: 0.5rem;
-    /* min-width: 60%; */
 }
 
 .recent:hover {
     background: #695E3F;
     background: linear-gradient(90deg, #7A3D2D 0%, #FBFBE3 100%);
-    /* background: linear-gradient(180deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%); */
-    /* box-shadow: #1a1a1a 10px 0px 0px; */
 }
 
 .recent-title {
@@ -61,7 +89,7 @@ main {
     color: #fff;
     text-align: left;
     font-weight: 300;
-    letter-spacing: 0.1rem;
+    letter-spacing: 0.5px;
 }
 
 .recent-date {
@@ -71,23 +99,10 @@ main {
     align-items: center;
     display: grid;
     letter-spacing: 0.05rem;
-    font-size: 1.2em;
+    font-size: 1.2rem;
     background-color: #1a1a1a;
     min-width: 6rem;
     text-align: center;
-}
-
-
-h2 {
-    padding-bottom: 0.5rem;
-    font-family: 'Lexend', 'Arial', sans-serif
-}
-
-h3 {
-    font-weight: 200;
-    font-size: 1.2rem;
-    margin-top: -0.5rem;
-    letter-spacing: 0.15rem;
 }
 
 .gr {
@@ -110,20 +125,19 @@ a:hover {
 }
 
 footer {
-    width: 100%;
     background-color: #fafafa;
     text-align: center;
     padding: 1rem;
     color: #aaa;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 @media (min-width: 1000px) {
     hr {
-            width: 5rem;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
+        width: 5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
 
     .recent {
         width: 50%;
@@ -135,21 +149,14 @@ footer {
     }
 
     .fl {
-        /* display: block; */
-        /* display: flex; */
-        /* flex-wrap: wrap; */
         display: grid;
         grid-template-columns: repeat(5, 10rem);
-        /* This would display the children elements in  three equal columns with equal width */
         gap: 5px;
         justify-content: center;
     }
 
     .gr {
         padding: 0.5rem;
-        /* background-color÷: #0000FF; */
-        /* border: 1px sol÷id #ffff; */
-        /* I added a border all round each column for better visibility and separation of the columns */
     }
 
     th,
@@ -167,67 +174,115 @@ footer {
 
 @media (max-width: 1000px) {
     hr {
-            width: 5rem;
-            margin-top: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-    
-        main {
-            margin: 2rem 3rem 3rem 3rem;
-            text-align: center;
-        }
+        width: 5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
 
-        .recent-title {
-            font-size: 1.2rem;
-        }
-
-        .recent {
-            margin-left: 1rem;
-            margin-right: 1rem;
-        }
-
-        .fl {
-            /* display: block; */
-            /* display: flex; */
-            /* flex-wrap: wrap; */
-            display: grid;
-            grid-template-columns: repeat(2, 10rem);
-            /* This would display the children elements in  three equal columns with equal width */
-            gap: 5px;
-            justify-content: center;
-        }
     
-        .gr {
-            padding: 0.5rem;
-            /* background-color÷: #0000FF; */
-            /* border: 1px sol÷id #ffff; */
-            /* I added a border all round each column for better visibility and separation of the columns */
-        }
-    
-        a {
-            color: #7a3d2d;
-            text-decoration: none;
-            font-weight: 600;
-        }
+    main {
+        margin-right: 1.3rem;
+        margin-left: 1.3rem;
+        text-align: center;
+    }
 
-        a:visited {
-            color: #1a1a1a;
-        }
+    .recent-title {
+        font-size: 1rem;
+    }
 
-        a:hover {
-            color: #d4a388;
-        }
+    .recent-label {
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+    }
+
+    .recent-date {
+        font-size: 1rem;
+    }
+
+    .scripture {
+        font-size: 0.8rem;
+    }
+
+    .fl {
+        display: grid;
+        grid-template-columns: repeat(2, 10rem);
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .gr {
+        padding: 0.5rem;
+    }
+
+    a {
+        color: #7a3d2d;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    a:visited {
+        color: #1a1a1a;
+    }
+
+    a:hover {
+        color: #d4a388;
+    }
+
+    th,
+    td {
+        padding: 0.5rem 0.25rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        font-size: 0.75rem;
+    }
+
+    iframe {
+        width: 90%;
+        margin-top: 1rem;
+    }
+
+    .banner {
+        text-align: center;
+        padding: 2rem;
+        color: #fff;
+        background-image: url(../img/frm-cover.jpg);
+        background-size: cover;
+        background-position: 50% 38%;
+        margin-bottom: 1rem;
+    }
+
+    .banner h1 {
+        font-family: 'Campaign-Slab', 'Courier New', monospace;
+        font-size: 2rem;
+        margin-top: 0;
+    }
+        
+    .banner h3 {
+        font-weight: 200;
+        font-size: 1.1rem;
+        margin-top: 0;
+        margin-bottom: 0;
+        letter-spacing: 0.15rem;
+    }
+
+    h1 {
+        font-family: 'Campaign-Slab', 'Courier New', monospace;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        padding-bottom: 0.5rem;
+        font-family: 'Lexend', 'Arial', sans-serif
+    }
+
+    h3 {
+        font-weight: 200;
+        font-size: 1rem;
+        margin-top: -0.5rem;
+        letter-spacing: 0.15rem;
+    }
+
     
-        th,
-        td {
-            padding: 0.7rem 0.5rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-    
-        iframe {
-            width: 90%;
-            margin-top: 1rem;
-        }
 }
 
