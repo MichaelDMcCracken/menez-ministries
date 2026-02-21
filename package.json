@@ -1,0 +1,13 @@
+{
+  "name": "menez-ministries",
+  "version": "1.0.0",
+  "description": "Sermon library website",
+  "main": "build.js",
+  "scripts": {
+    "build": "node build.js",
+    "extract": "node extract-sermons.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
+}
