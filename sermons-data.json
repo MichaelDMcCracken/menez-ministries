@@ -442,7 +442,7 @@
   },
   "1-peter": {
     "sermons": [
-    {
+      {
         "passage": "1 Peter 1:1–8",
         "title": "Our Motivation for Missions",
         "url": "https://youtu.be/yZeDOTAxZeQ?si=AfCBGYxu7b7S5fWh"
@@ -730,7 +730,7 @@
   },
   "colossians": {
     "sermons": [
-     {
+      {
         "passage": "Colossians 1:13–20",
         "title": "Our Rescuer is Also the Head of the Church",
         "url": "https://youtu.be/_laAa3IYUNw?si=7etryMMLzqQkQraP"
@@ -1597,11 +1597,11 @@
   },
   "john": {
     "sermons": [
-        {
-            "passage": "John 3:1–15",
-            "title": "All Members of the True Church are Born-Again Believers",
-            "url": "https://youtu.be/fRnDlT4-1s8?si=iesOzCveA64nRLNs"
-        },
+      {
+        "passage": "John 3:1–15",
+        "title": "All Members of the True Church are Born-Again Believers",
+        "url": "https://youtu.be/fRnDlT4-1s8?si=iesOzCveA64nRLNs"
+      },
       {
         "passage": "John 5:16–30",
         "title": "Jesus and the Father",
@@ -1850,12 +1850,12 @@
         "title": "An Introduction to the Book of Luke",
         "url": "https://youtu.be/oouYsIfeVa4?si=RzRKFMat3qG00PbW"
       },
-        {
+      {
         "passage": "Luke 1:5–25",
         "title": "The Promised Forerunner to the Coming Messiah",
         "url": "https://youtu.be/YAoebv94a0c"
       },
-        {
+      {
         "passage": "Luke 1:5–25",
         "title": "The Joy of the Forerunner of Christ",
         "url": "https://youtu.be/OeoqUNgPCs4?si=1xDYBQVUjTJYmztA",
@@ -2838,6 +2838,12 @@
         "passage": "Psalm 141",
         "title": "Prayers of Desperation and Dependency",
         "url": "https://soundcloud.com/user-440517750/prayers-of-desperation-and-dependency"
+      },
+      {
+        "title": "What Can the Righteous Do In a Wicked World?",
+        "url": "https://www.youtube.com/watch?v=cdfxTKufNak",
+        "passage": "Psalm 11",
+        "date": "2026-04-26"
       }
     ]
   },
