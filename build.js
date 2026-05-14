@@ -7,8 +7,26 @@ function capitalize(str) {
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
+function parsePassageReference(passage) {
+  if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
+  const firstMatch = passage.match(/(\d+)(?::(\d+))?/);
+  if (!firstMatch) return { chapter: Infinity, verse: Infinity };
+  const chapter = Number(firstMatch[1]);
+  const verse = firstMatch[2] ? Number(firstMatch[2]) : 1;
+  return { chapter, verse };
+}
+
+function sortSermonsByReference(sermons) {
+  return [...sermons].sort((a, b) => {
+    const refA = parsePassageReference(a.passage);
+    const refB = parsePassageReference(b.passage);
+    if (refA.chapter !== refB.chapter) return refA.chapter - refB.chapter;
+    return refA.verse - refB.verse;
+  });
+}
+
 function generateBookHTML(book, bookData) {
-  const sermons = bookData.sermons;
+  const sermons = sortSermonsByReference(bookData.sermons);
   const subtitle = bookData.subtitle;
   const bookTitle = capitalize(book.replace(/-/g, ' '));
   const pageTitle = `Sermons from ${bookTitle}`;

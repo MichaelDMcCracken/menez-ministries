@@ -47,6 +47,78 @@
             background: #fff;
             box-sizing: border-box;
         }
+        .book-list {
+            margin-bottom: 24px;
+        }
+        .book-list h3 {
+            margin-bottom: 6px;
+        }
+        .sermon-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid #e1e4ea;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+        }
+        .sermon-info {
+            min-width: 0;
+        }
+        .sermon-title {
+            font-weight: 600;
+        }
+        .sermon-meta {
+            color: #555;
+            font-size: .95rem;
+            margin-top: 4px;
+        }
+        .sermon-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .sermon-actions button {
+            background: #e5e7eb;
+            color: #111;
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .sermon-actions button:hover {
+            background: #d1d5db;
+        }
+        .book-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 14px;
+            border: 1px solid #e1e4ea;
+            border-radius: 12px;
+            background: #fff;
+            margin-bottom: 8px;
+        }
+        .book-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .book-header button {
+            background: transparent;
+            color: #1d4ed8;
+            border: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        .book-content {
+            margin-bottom: 18px;
+        }
+        .hidden {
+            display: none;
+        }
         textarea {
             min-height: 100px;
             resize: vertical;
@@ -89,7 +161,7 @@
 <body>
     <div class="page">
         <h1>Sermon Admin</h1>
-        <p class="note">Use this page locally after running <code>npm run admin</code>. It updates <code>sermons-data.json</code> directly. After saving, run <code>npm run build</code> and commit/push the updated files.</p>
+        <p class="note">Use this page locally after running <code>npm run admin</code>. It updates <code>sermons-data.json</code> directly. After saving, click the build button below to regenerate pages, or use the new build-and-push button to build and push updates automatically.</p>
 
         <form id="admin-form">
             <label for="book">Book slug</label>
@@ -98,6 +170,8 @@
                 <option value="__new__">Add a new book slug</option>
             </select>
             <input id="new-book" name="newBook" placeholder="New book slug (e.g. 1-corinthians)" style="display:none">
+            <input id="original-book" name="originalBook" type="hidden">
+            <input id="sermon-index" name="sermonIndex" type="hidden">
 
             <label for="subtitle">Book subtitle (optional)</label>
             <input id="subtitle" name="subtitle" placeholder="Optional subtitle for a new book">
@@ -114,9 +188,24 @@
             <label for="url">Audio URL</label>
             <input id="url" name="url" type="url" placeholder="https://..." required>
 
+            <label for="commit-message">Commit message (Build & Push only)</label>
+            <input id="commit-message" name="commitMessage" placeholder="Default is current date">
+
             <button type="submit">Save sermon</button>
+            <button type="button" id="cancel-edit" style="margin-left: 12px; background:#6b7280; display:none;">Cancel edit</button>
             <button type="button" id="build-button" style="margin-left: 12px; background:#047857;">Build now</button>
+            <button type="button" id="build-push-button" style="margin-left: 12px; background:#0f766e;">Build &amp; Push</button>
         </form>
+
+        <section id="added-sermons-list" style="margin-top: 32px;">
+            <h2>Unpublished sermon changes</h2>
+            <div id="added-sermons-container">Loading...</div>
+        </section>
+
+        <section id="sermons-list" style="margin-top: 32px;">
+            <h2>Existing sermons</h2>
+            <div id="sermons-container">Loading sermons…</div>
+        </section>
 
         <div id="status" class="status"></div>
     </div>
@@ -126,7 +215,15 @@
         const statusEl = document.getElementById('status');
         const bookSelect = document.getElementById('book');
         const newBookInput = document.getElementById('new-book');
+        const originalBookInput = document.getElementById('original-book');
+        const sermonIndexInput = document.getElementById('sermon-index');
+        const cancelEditButton = document.getElementById('cancel-edit');
+        const commitMessageInput = document.getElementById('commit-message');
         const buildButton = document.getElementById('build-button');
+        const buildPushButton = document.getElementById('build-push-button');
+        const sermonsContainer = document.getElementById('sermons-container');
+
+        let sermonData = {};
 
         function showStatus(message, type = 'success') {
             statusEl.textContent = message;
@@ -146,16 +243,177 @@
             }
         }
 
-        async function loadBookSlugs() {
+        function resetForm() {
+            form.reset();
+            originalBookInput.value = '';
+            sermonIndexInput.value = '';
+            cancelEditButton.style.display = 'none';
+            updateBookInputVisibility();
+            commitMessageInput.value = new Date().toISOString().slice(0, 10);
+        }
+
+        function formatBookTitle(book) {
+            return book.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+        }
+
+        function parsePassageReference(passage) {
+            if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
+            const firstMatch = passage.match(/(\d+)(?::(\d+))?/);
+            if (!firstMatch) return { chapter: Infinity, verse: Infinity };
+            const chapter = Number(firstMatch[1]);
+            const verse = firstMatch[2] ? Number(firstMatch[2]) : 1;
+            return { chapter, verse };
+        }
+
+        function sortSermonsByReference(sermons) {
+            return [...sermons].sort((a, b) => {
+                const refA = parsePassageReference(a.passage);
+                const refB = parsePassageReference(b.passage);
+                if (refA.chapter !== refB.chapter) return refA.chapter - refB.chapter;
+                return refA.verse - refB.verse;
+            });
+        }
+
+        function renderBookOptions(data) {
+            const slugs = Object.keys(data).sort();
+            bookSelect.innerHTML = '<option value="" disabled selected>Select a book</option>' +
+                '<option value="__new__">Add a new book slug</option>' +
+                slugs.map(slug => `<option value="${slug}">${formatBookTitle(slug)}</option>`).join('');
+            updateBookInputVisibility();
+        }
+
+        function renderSermonList(data) {
+            sermonData = data;
+            const books = Object.keys(data).sort();
+            if (!books.length) {
+                sermonsContainer.textContent = 'No sermons yet.';
+                return;
+            }
+
+            sermonsContainer.innerHTML = books.map(book => {
+                const bookData = data[book];
+                const bookTitle = formatBookTitle(book);
+                const subtitleHtml = bookData.subtitle ? `<div class="sermon-meta">${bookData.subtitle}</div>` : '';
+                const sermonsHtml = sortSermonsByReference(bookData.sermons).map((sermon, index) => {
+                    const meta = [sermon.date, sermon.passage].filter(Boolean).join(' • ');
+                    return `
+                        <div class="sermon-row">
+                            <div class="sermon-info">
+                                <div class="sermon-title">${sermon.title}</div>
+                                <div class="sermon-meta">${meta}</div>
+                            </div>
+                            <div class="sermon-actions">
+                                <button type="button" data-action="edit" data-book="${book}" data-index="${index}">Edit</button>
+                                <button type="button" data-action="delete" data-book="${book}" data-index="${index}">Delete</button>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                return `
+                    <div class="book-list">
+                        <div class="book-header" data-book="${book}">
+                            <h3>${bookTitle}</h3>
+                            <button type="button" aria-expanded="false">Expand</button>
+                        </div>
+                        <div class="book-content hidden">
+                            ${subtitleHtml}
+                            ${sermonsHtml}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function loadData() {
             try {
                 const response = await fetch('/data');
                 if (!response.ok) throw new Error('Unable to load sermon data');
                 const data = await response.json();
-                const slugs = Object.keys(data).sort();
-                bookSelect.innerHTML = '<option value="" disabled selected>Select a book</option>' +
-                    '<option value="__new__">Add a new book slug</option>' +
-                    slugs.map(slug => `<option value="${slug}">${slug}</option>`).join('');
-                updateBookInputVisibility();
+                renderBookOptions(data);
+                renderSermonList(data);
+                loadAddedSermons();
+            } catch (error) {
+                showStatus(error.message, 'error');
+            }
+        }
+
+        function renderAddedSermons(items = { added: [], updated: [] }) {
+            const container = document.getElementById('added-sermons-container');
+            const added = Array.isArray(items.added) ? items.added : [];
+            const updated = Array.isArray(items.updated) ? items.updated : [];
+            if (!added.length && !updated.length) {
+                container.textContent = 'No unpublished sermon changes.';
+                return;
+            }
+
+            const addedHtml = items.added.map(item => `
+                <div class="sermon-row">
+                    <div class="sermon-info">
+                        <div class="sermon-title">${item.title}</div>
+                        <div class="sermon-meta">${formatBookTitle(item.book)} ${item.date ? `• ${item.date}` : ''}</div>
+                    </div>
+                </div>`).join('');
+
+            const updatedHtml = items.updated.map(item => `
+                <div class="sermon-row">
+                    <div class="sermon-info">
+                        <div class="sermon-title">${item.title}</div>
+                        <div class="sermon-meta">Updated in ${formatBookTitle(item.book)}${item.date ? ` • ${item.date}` : ''}</div>
+                    </div>
+                </div>`).join('');
+
+            container.innerHTML = `
+                ${items.added.length ? `<div><strong>Added</strong>${addedHtml}</div>` : ''}
+                ${items.updated.length ? `<div style="margin-top:16px"><strong>Updated</strong>${updatedHtml}</div>` : ''}`;
+        }
+
+        async function loadAddedSermons() {
+            try {
+                const response = await fetch('/added-sermons');
+                if (!response.ok) throw new Error('Unable to load unpublished sermon changes');
+                const result = await response.json();
+                renderAddedSermons(result);
+            } catch (error) {
+                const container = document.getElementById('added-sermons-container');
+                container.textContent = 'Unable to load unpublished sermon changes.';
+            }
+        }
+
+        function startEdit(book, index) {
+            const bookData = sermonData[book];
+            if (!bookData || !bookData.sermons[index]) {
+                showStatus('Unable to load sermon for editing.', 'error');
+                return;
+            }
+
+            const sermon = bookData.sermons[index];
+            bookSelect.value = book;
+            updateBookInputVisibility();
+            document.getElementById('subtitle').value = bookData.subtitle || '';
+            document.getElementById('title').value = sermon.title;
+            document.getElementById('passage').value = sermon.passage || '';
+            document.getElementById('date').value = sermon.date || '';
+            document.getElementById('url').value = sermon.url;
+            originalBookInput.value = book;
+            sermonIndexInput.value = index;
+            cancelEditButton.style.display = 'inline-flex';
+            showStatus(`Editing sermon from ${book}. Save to apply changes.`, 'success');
+        }
+
+        async function deleteSermon(book, index) {
+            if (!confirm('Delete this sermon? This cannot be undone.')) return;
+            hideStatus();
+            try {
+                const response = await fetch('/delete-sermon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book, sermonIndex: index })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Delete failed');
+                showStatus('Sermon deleted successfully.');
+                resetForm();
+                await loadData();
+                await loadAddedSermons();
             } catch (error) {
                 showStatus(error.message, 'error');
             }
@@ -170,7 +428,9 @@
                 title: document.getElementById('title').value.trim(),
                 passage: document.getElementById('passage').value.trim(),
                 date: document.getElementById('date').value,
-                url: document.getElementById('url').value.trim()
+                url: document.getElementById('url').value.trim(),
+                originalBook: originalBookInput.value || undefined,
+                sermonIndex: sermonIndexInput.value !== '' ? Number(sermonIndexInput.value) : undefined
             };
 
             if (!book || !payload.title || !payload.url) {
@@ -179,7 +439,7 @@
             }
 
             try {
-                const response = await fetch('/add-sermon', {
+                const response = await fetch('/save-sermon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -187,9 +447,9 @@
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Failed to save sermon');
                 showStatus('Sermon saved successfully. You can now build the site below.');
-                form.reset();
-                updateBookInputVisibility();
-                loadBookSlugs();
+                resetForm();
+                await loadData();
+                await loadAddedSermons();
             } catch (error) {
                 showStatus(error.message, 'error');
             }
@@ -208,16 +468,67 @@
             }
         }
 
+        async function runBuildAndPush() {
+            hideStatus();
+            showStatus('Running build and pushing changes... please wait.', 'success');
+            try {
+                const response = await fetch('/build-push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ commitMessage: commitMessageInput.value.trim() })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Build and push failed');
+                showStatus('Build, commit, and push completed successfully.');
+            } catch (error) {
+                showStatus(error.message, 'error');
+            }
+        }
+
         form.addEventListener('submit', event => {
             event.preventDefault();
             hideStatus();
             submitSermon();
         });
 
+        cancelEditButton.addEventListener('click', event => {
+            event.preventDefault();
+            hideStatus();
+            resetForm();
+        });
+
         bookSelect.addEventListener('change', updateBookInputVisibility);
         buildButton.addEventListener('click', runBuild);
+        buildPushButton.addEventListener('click', runBuildAndPush);
+        sermonsContainer.addEventListener('click', event => {
+            const header = event.target.closest('.book-header');
+            if (header) {
+                const content = header.nextElementSibling;
+                if (!content) return;
+                const expanded = header.querySelector('button');
+                content.classList.toggle('hidden');
+                if (expanded) {
+                    const isHidden = content.classList.contains('hidden');
+                    expanded.textContent = isHidden ? 'Expand' : 'Collapse';
+                    expanded.setAttribute('aria-expanded', !isHidden);
+                }
+                return;
+            }
 
-        loadBookSlugs();
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            const action = button.dataset.action;
+            const book = button.dataset.book;
+            const index = Number(button.dataset.index);
+            if (action === 'edit') {
+                startEdit(book, index);
+            } else if (action === 'delete') {
+                deleteSermon(book, index);
+            }
+        });
+
+        resetForm();
+        loadData();
     </script>
 </body>
 </html>
