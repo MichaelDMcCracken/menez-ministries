@@ -4,7 +4,7 @@ const path = require('path');
 const { URL } = require('url');
 const { exec } = require('child_process');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'sermons-data.json');
 const ADMIN_FILE = path.join(ROOT, 'admin.html');
@@ -286,6 +286,13 @@ function createServer() {
 }
 
 const server = createServer();
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Try another port with PORT=<port> npm run admin.`);
+    process.exit(1);
+  }
+  throw err;
+});
 server.listen(PORT, () => {
   console.log(`Admin server is running at http://localhost:${PORT}`);
   console.log('Open that address in your browser and add sermons locally.');

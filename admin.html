@@ -163,6 +163,8 @@
         <h1>Sermon Admin</h1>
         <p class="note">Use this page locally after running <code>npm run admin</code>. It updates <code>sermons-data.json</code> directly. After saving, click the build button below to regenerate pages, or use the new build-and-push button to build and push updates automatically.</p>
 
+        <div id="status" class="status"></div>
+
         <form id="admin-form">
             <label for="book">Book slug</label>
             <select id="book" name="book" required>
@@ -206,8 +208,6 @@
             <h2>Existing sermons</h2>
             <div id="sermons-container">Loading sermons…</div>
         </section>
-
-        <div id="status" class="status"></div>
     </div>
 
     <script>
@@ -229,6 +229,7 @@
             statusEl.textContent = message;
             statusEl.className = 'status ' + type;
             statusEl.style.display = 'block';
+            statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function hideStatus() {
@@ -479,7 +480,7 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Build and push failed');
-                showStatus('Build, commit, and push completed successfully.');
+                showStatus('Build, commit, and push completed successfully. Verification complete.', 'success');
             } catch (error) {
                 showStatus(error.message, 'error');
             }
