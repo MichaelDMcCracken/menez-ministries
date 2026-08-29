@@ -11,6 +11,6 @@
  * DO NOT use the service-role key here.
  */
 window.__SUPABASE_CONFIG__ = {
-  url:     'YOUR_SUPABASE_URL',      // e.g. https://abcdefgh.supabase.co
-  anonKey: 'YOUR_SUPABASE_ANON_KEY', // starts with "eyJ..."
+  url:     'https://bgwsxziccrjgfedcclqt.supabase.co',      // e.g. https://abcdefgh.supabase.co
+  anonKey: 'sb_publishable_7SqzBcy2URLq38Y5zjYOAA_KHZ_ClAS', // starts with "eyJ..."
 };
