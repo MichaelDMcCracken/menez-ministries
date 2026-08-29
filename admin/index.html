@@ -378,7 +378,7 @@ function renderTab() {
 }
 
 // ---- Sermons tab ----
-function renderSermons() {
+function getFilteredSortedSermons() {
   var q = state.search.toLowerCase();
   var filtered = state.sermons.filter(function (s) {
     if (q && !s.title.toLowerCase().includes(q) &&
@@ -387,9 +387,7 @@ function renderSermons() {
     if (state.filterBook && s.book_slug !== state.filterBook) return false;
     return true;
   });
-
-  // Sort by date
-  filtered = filtered.slice().sort(function (a, b) {
+  return filtered.slice().sort(function (a, b) {
     var da = a.date || '';
     var db = b.date || '';
     if (!da && !db) return 0;
@@ -398,6 +396,10 @@ function renderSermons() {
     return state.sortDir === 'asc' ? da < db ? -1 : da > db ? 1 : 0
                                    : da > db ? -1 : da < db ? 1 : 0;
   });
+}
+
+function renderSermons() {
+  var filtered = getFilteredSortedSermons();
 
   // Unique books for filter
   var books = [];
@@ -426,27 +428,10 @@ function renderSermons() {
 // Search: update state without a full re-render to preserve input focus
 function onSearchInput(v) {
   state.search = v;
-  var q = v.toLowerCase();
-  var filtered = state.sermons.filter(function (s) {
-    if (q && !s.title.toLowerCase().includes(q) &&
-        !(s.passage || '').toLowerCase().includes(q) &&
-        !(s.book_slug || '').toLowerCase().includes(q)) return false;
-    if (state.filterBook && s.book_slug !== state.filterBook) return false;
-    return true;
-  });
-  filtered = filtered.slice().sort(function (a, b) {
-    var da = a.date || '';
-    var db = b.date || '';
-    if (!da && !db) return 0;
-    if (!da) return 1;
-    if (!db) return -1;
-    return state.sortDir === 'asc' ? da < db ? -1 : da > db ? 1 : 0
-                                   : da > db ? -1 : da < db ? 1 : 0;
-  });
+  var filtered = getFilteredSortedSermons();
   var card = document.querySelector('#search-box').closest('.card');
   // Replace only the sermon rows (everything after the toolbar div)
   var toolbar = card.querySelector('.toolbar');
-  // Remove existing rows/empty msg
   while (toolbar.nextSibling) card.removeChild(toolbar.nextSibling);
   var tmp = document.createElement('div');
   tmp.innerHTML = filtered.length === 0
@@ -455,7 +440,6 @@ function onSearchInput(v) {
   while (tmp.firstChild) card.appendChild(tmp.firstChild);
 }
 
-function setSearch(v)     { state.search = v; render(); }
 function setBookFilter(v) { state.filterBook = v; render(); }
 function toggleSortDir()  { state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc'; render(); }
 
