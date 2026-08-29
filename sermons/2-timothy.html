@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+    <script src="../js/supabase-config.js"></script>
 </head>
 <body>
     <a href="../library.html">
@@ -20,8 +21,9 @@
     </a>
     <main>
         <h1>Sermons from 2 Timothy</h1>
-        
+        <div id="subtitle-area"></div>
         <hr>
+        <div id="sermon-list">
         <table style="margin-left:auto; margin-right: auto;">
             <thead>
                 <tr>
@@ -29,7 +31,7 @@
                     <th>Title</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="sermons-tbody">
                 <tr>
                     <td>2 Timothy 3:10–17</td>
                     <td><a href="https://youtu.be/hgTWj7-ADrM?si=vZCoH2I9p2ODyMqi&t=1908">The Christian Captured by the Word</a></td>
@@ -40,10 +42,91 @@
                 </tr>
             </tbody>
         </table>
+        </div>
     </main>
 </body>
 <footer>
     © 2024 Menez Ministries
 </footer>
+<script>
+  // Dynamic Supabase loader — replaces static content when Supabase is configured
+  (function () {
+    var BOOK_SLUG = '2-timothy';
+    var config = window.__SUPABASE_CONFIG__;
+    if (!config || !config.url || !config.anonKey) return;
 
+    var url = config.url;
+    var key = config.anonKey;
+
+    function supabaseGet(path) {
+      return fetch(url + '/rest/v1' + path, {
+        headers: {
+          'apikey': key,
+          'Authorization': 'Bearer ' + key,
+        }
+      }).then(function (r) { return r.json(); });
+    }
+
+    supabaseGet(
+      '/sermons?book_slug=eq.' + encodeURIComponent(BOOK_SLUG) +
+      '&published=eq.true&select=id,title,passage&order=passage.asc,title.asc'
+    ).then(function (sermons) {
+      if (!sermons || !sermons.length) return;
+
+      var ids = sermons.map(function (s) { return s.id; });
+      supabaseGet(
+        '/media_links?sermon_id=in.(' + ids.join(',') + ')&select=sermon_id,url,sort_order&order=sort_order.asc'
+      ).then(function (links) {
+        var mediaMap = {};
+        (links || []).forEach(function (l) {
+          if (!mediaMap[l.sermon_id]) mediaMap[l.sermon_id] = [];
+          mediaMap[l.sermon_id].push(l.url);
+        });
+
+        // Also fetch series subtitle
+        supabaseGet('/series?book_slug=eq.' + encodeURIComponent(BOOK_SLUG) + '&select=subtitle').then(function (series) {
+          var sub = series && series[0] && series[0].subtitle;
+          var subArea = document.getElementById('subtitle-area');
+          if (subArea && sub) subArea.innerHTML = '<h3>' + escHtml(sub) + '</h3>';
+        }).catch(function(){});
+
+        var tbody = document.getElementById('sermons-tbody');
+        var hasPass = sermons.some(function(s){ return s.passage; });
+
+        // Update table header
+        var thead = document.querySelector('table thead tr');
+        if (thead && hasPass && thead.children.length === 1) {
+          thead.insertAdjacentHTML('afterbegin', '<th>Passage</th>');
+        }
+
+        var rows = '';
+        sermons.forEach(function (s) {
+          var passCell = s.passage ? '<td>' + escHtml(s.passage) + '</td>' : (hasPass ? '<td></td>' : '');
+          var urls = mediaMap[s.id] || [];
+          var titleCell;
+          if (urls.length > 0) {
+            titleCell = '<td><a href="' + escAttr(urls[0]) + '">' + escHtml(s.title) + '</a>';
+            if (urls.length > 1) {
+              titleCell += ' ' + urls.slice(1).map(function(u,i){
+                return '<a href="' + escAttr(u) + '" style="font-size:.85em;margin-left:6px">[' + (i+2) + ']</a>';
+              }).join('');
+            }
+            titleCell += '</td>';
+          } else {
+            titleCell = '<td>' + escHtml(s.title) + '</td>';
+          }
+          rows += '<tr>' + passCell + titleCell + '</tr>';
+        });
+        if (tbody) tbody.innerHTML = rows;
+      });
+    }).catch(function(){});
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) {
+      return String(s).replace(/"/g,'&quot;');
+    }
+  })();
+</script>
 </html>

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build.js",
     "admin": "node admin-server.js",
-    "extract": "node extract-sermons.js"
+    "extract": "node extract-sermons.js",
+    "migrate": "node scripts/migrate-to-supabase.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0"
