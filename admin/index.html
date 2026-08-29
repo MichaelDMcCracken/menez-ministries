@@ -170,6 +170,43 @@ function authFetch(method, path, body) {
 }
 
 // ============================================================
+// Bible books — canonical order (display name → slug)
+// ============================================================
+var BIBLE_BOOKS = [
+  ['Genesis','genesis'],['Exodus','exodus'],['Leviticus','leviticus'],
+  ['Numbers','numbers'],['Deuteronomy','deuteronomy'],['Joshua','joshua'],
+  ['Judges','judges'],['Ruth','ruth'],['1 Samuel','1-samuel'],
+  ['2 Samuel','2-samuel'],['1 Kings','1-kings'],['2 Kings','2-kings'],
+  ['1 Chronicles','1-chronicles'],['2 Chronicles','2-chronicles'],
+  ['Ezra','ezra'],['Nehemiah','nehemiah'],['Esther','esther'],
+  ['Job','job'],['Psalms','psalms'],['Proverbs','proverbs'],
+  ['Ecclesiastes','ecclesiastes'],['Song of Solomon','song-of-solomon'],
+  ['Isaiah','isaiah'],['Jeremiah','jeremiah'],['Lamentations','lamentations'],
+  ['Ezekiel','ezekiel'],['Daniel','daniel'],['Hosea','hosea'],
+  ['Joel','joel'],['Amos','amos'],['Obadiah','obadiah'],['Jonah','jonah'],
+  ['Micah','micah'],['Nahum','nahum'],['Habakkuk','habakkuk'],
+  ['Zephaniah','zephaniah'],['Haggai','haggai'],['Zechariah','zechariah'],
+  ['Malachi','malachi'],
+  ['Matthew','matthew'],['Mark','mark'],['Luke','luke'],['John','john'],
+  ['Acts','acts'],['Romans','romans'],['1 Corinthians','1-corinthians'],
+  ['2 Corinthians','2-corinthians'],['Galatians','galatians'],
+  ['Ephesians','ephesians'],['Philippians','philippians'],
+  ['Colossians','colossians'],['1 Thessalonians','1-thessalonians'],
+  ['2 Thessalonians','2-thessalonians'],['1 Timothy','1-timothy'],
+  ['2 Timothy','2-timothy'],['Titus','titus'],['Philemon','philemon'],
+  ['Hebrews','hebrews'],['James','james'],['1 Peter','1-peter'],
+  ['2 Peter','2-peter'],['1 John','1-john'],['2 John','2-john'],
+  ['3 John','3-john'],['Jude','jude'],['Revelation','revelation'],
+];
+
+function bookSelectOptions(selectedSlug) {
+  return '<option value="">— select book —</option>' +
+    BIBLE_BOOKS.map(function (b) {
+      return '<option value="' + escAttr(b[1]) + '"' + (selectedSlug === b[1] ? ' selected' : '') + '>' + escHtml(b[0]) + '</option>';
+    }).join('');
+}
+
+// ============================================================
 // State
 // ============================================================
 var state = {
@@ -181,6 +218,7 @@ var state = {
   mediaLinks: {},    // sermon_id -> [links]
   search:     '',
   filterBook: '',
+  sortDir:    'desc', // 'desc' = newest first, 'asc' = oldest first
   loading:    false,
   modal:      null,  // { type: 'sermon'|'series'|'speaker'|'confirm', data: {...} }
 };
@@ -340,15 +378,28 @@ function renderTab() {
 }
 
 // ---- Sermons tab ----
-function renderSermons() {
+function getFilteredSortedSermons() {
+  var q = state.search.toLowerCase();
   var filtered = state.sermons.filter(function (s) {
-    var q = state.search.toLowerCase();
     if (q && !s.title.toLowerCase().includes(q) &&
         !(s.passage || '').toLowerCase().includes(q) &&
         !(s.book_slug || '').toLowerCase().includes(q)) return false;
     if (state.filterBook && s.book_slug !== state.filterBook) return false;
     return true;
   });
+  return filtered.slice().sort(function (a, b) {
+    var da = a.date || '';
+    var db = b.date || '';
+    if (!da && !db) return 0;
+    if (!da) return 1;   // nulls to the end
+    if (!db) return -1;
+    return state.sortDir === 'asc' ? da < db ? -1 : da > db ? 1 : 0
+                                   : da > db ? -1 : da < db ? 1 : 0;
+  });
+}
+
+function renderSermons() {
+  var filtered = getFilteredSortedSermons();
 
   // Unique books for filter
   var books = [];
@@ -360,20 +411,37 @@ function renderSermons() {
       return '<option value="' + escAttr(b) + '"' + (state.filterBook === b ? ' selected' : '') + '>' + escHtml(b) + '</option>';
     }).join('');
 
+  var sortLabel = state.sortDir === 'desc' ? 'Date ↓' : 'Date ↑';
   var rows = filtered.map(renderSermonRow).join('');
 
   return '<div class="card">' +
     '<div class="toolbar">' +
-    '<input type="search" id="search-box" placeholder="Search sermons…" value="' + escAttr(state.search) + '" oninput="setSearch(this.value)">' +
+    '<input type="search" id="search-box" placeholder="Search sermons…" value="' + escAttr(state.search) + '" oninput="onSearchInput(this.value)">' +
     '<select id="book-filter" onchange="setBookFilter(this.value)">' + bookOptions + '</select>' +
+    '<button class="btn btn-ghost btn-sm" onclick="toggleSortDir()" title="Toggle date sort">' + sortLabel + '</button>' +
     '<button class="btn btn-primary btn-sm" onclick="openAddSermon()">+ Add Sermon</button>' +
     '</div>' +
     (filtered.length === 0 ? '<div class="empty">No sermons found.</div>' : rows) +
     '</div>';
 }
 
-function setSearch(v)     { state.search = v;     render(); }
+// Search: update state without a full re-render to preserve input focus
+function onSearchInput(v) {
+  state.search = v;
+  var filtered = getFilteredSortedSermons();
+  var card = document.querySelector('#search-box').closest('.card');
+  // Replace only the sermon rows (everything after the toolbar div)
+  var toolbar = card.querySelector('.toolbar');
+  while (toolbar.nextSibling) card.removeChild(toolbar.nextSibling);
+  var tmp = document.createElement('div');
+  tmp.innerHTML = filtered.length === 0
+    ? '<div class="empty">No sermons found.</div>'
+    : filtered.map(renderSermonRow).join('');
+  while (tmp.firstChild) card.appendChild(tmp.firstChild);
+}
+
 function setBookFilter(v) { state.filterBook = v; render(); }
+function toggleSortDir()  { state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc'; render(); }
 
 function renderSermonRow(s) {
   var links = state.mediaLinks[s.id] || [];
@@ -483,7 +551,7 @@ function renderSermonModal(m) {
     '<h2>' + (isEdit ? 'Edit Sermon' : 'Add Sermon') + '</h2>' +
     '<div id="modal-err" class="err"></div>' +
     '<label>Title *</label><input id="m-title" value="' + escAttr(d.title || '') + '">' +
-    '<label>Book slug *</label><input id="m-book" placeholder="e.g. 1-corinthians" value="' + escAttr(d.book_slug || '') + '">' +
+    '<label>Book slug *</label><select id="m-book">' + bookSelectOptions(d.book_slug || '') + '</select>' +
     '<div class="row2">' +
     '<div><label>Passage</label><input id="m-passage" placeholder="e.g. Romans 8:1–4" value="' + escAttr(d.passage || '') + '"></div>' +
     '<div><label>Date</label><input id="m-date" type="date" value="' + escAttr(d.date || '') + '"></div>' +
@@ -534,7 +602,7 @@ function renderSeriesModal(m) {
     '<h2>' + (d.id ? 'Edit Series' : 'Add Series') + '</h2>' +
     '<div id="modal-err" class="err"></div>' +
     '<label>Name *</label><input id="s-name" value="' + escAttr(d.name || '') + '">' +
-    '<label>Book slug</label><input id="s-book" placeholder="e.g. romans" value="' + escAttr(d.book_slug || '') + '">' +
+    '<label>Book slug</label><select id="s-book">' + bookSelectOptions(d.book_slug || '') + '</select>' +
     '<label>Subtitle</label><input id="s-sub" value="' + escAttr(d.subtitle || '') + '">' +
     '<div class="modal-footer">' +
     '<button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>' +
