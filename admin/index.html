@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sermon Admin — Menez Ministries</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0; background: #f3f4f6; color: #111; font-size: 16px;
+    }
+    /* ---- Layout ---- */
+    #app { display: flex; flex-direction: column; min-height: 100vh; }
+    header {
+      background: #1a2744; color: #fff; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { margin: 0; font-size: 1.15rem; font-weight: 700; }
+    header .user-info { font-size: .875rem; opacity: .8; display: flex; gap: 16px; align-items: center; }
+    .page { max-width: 900px; margin: 0 auto; padding: 28px 20px; width: 100%; }
+    /* ---- Login ---- */
+    #login-screen { display: flex; align-items: center; justify-content: center; flex: 1; padding: 40px 20px; }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 36px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.1); width: 100%; max-width: 380px;
+    }
+    .login-card h2 { margin: 0 0 8px; font-size: 1.4rem; }
+    .login-card p { color: #555; margin: 0 0 24px; font-size: .95rem; }
+    /* ---- Cards / panels ---- */
+    .card {
+      background: #fff; border-radius: 12px; padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 20px;
+    }
+    /* ---- Forms ---- */
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: .9rem; }
+    input, textarea, select {
+      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 1rem; font-family: inherit; background: #fff; margin-bottom: 16px;
+    }
+    input:focus, textarea:focus, select:focus { outline: 2px solid #3b5bdb; border-color: transparent; }
+    textarea { min-height: 80px; resize: vertical; }
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 18px; border-radius: 8px; font-size: .95rem; font-weight: 600;
+      cursor: pointer; border: none; text-decoration: none; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary  { background: #3b5bdb; color: #fff; }
+    .btn-success  { background: #2f9e44; color: #fff; }
+    .btn-danger   { background: #e03131; color: #fff; }
+    .btn-ghost    { background: transparent; color: #555; border: 1px solid #d1d5db; }
+    .btn-sm       { padding: 6px 12px; font-size: .85rem; }
+    .btn-logout   { background: rgba(255,255,255,.15); color: #fff; padding: 6px 14px; font-size: .85rem; }
+    /* ---- Sermon list ---- */
+    .sermon-row {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .sermon-row:last-child { border-bottom: none; }
+    .sermon-info { flex: 1; min-width: 0; }
+    .sermon-title { font-weight: 600; margin-bottom: 4px; }
+    .sermon-meta  { color: #666; font-size: .875rem; }
+    .sermon-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .badge {
+      display: inline-block; font-size: .75rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; margin-left: 8px;
+    }
+    .badge-published   { background: #d3f9d8; color: #2b8a3e; }
+    .badge-unpublished { background: #ffe3e3; color: #c92a2a; }
+    /* ---- Toolbar ---- */
+    .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .toolbar input { margin-bottom: 0; flex: 1; min-width: 180px; }
+    /* ---- Media rows ---- */
+    .media-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .media-row input { margin-bottom: 0; }
+    /* ---- Toast ---- */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1a2744; color: #fff; padding: 12px 24px; border-radius: 8px;
+      font-size: .95rem; opacity: 0; transition: all .3s; pointer-events: none; z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    /* ---- Overlay ---- */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+    }
+    .modal {
+      background: #fff; border-radius: 16px; padding: 28px 28px 20px;
+      width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 16px 48px rgba(0,0,0,.2);
+    }
+    .modal h2 { margin: 0 0 20px; font-size: 1.2rem; }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+    /* ---- Tab bar ---- */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; }
+    .tab {
+      padding: 10px 18px; font-weight: 600; font-size: .95rem; cursor: pointer;
+      border: none; background: none; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    }
+    .tab.active { color: #3b5bdb; border-bottom-color: #3b5bdb; }
+    /* ---- Misc ---- */
+    .empty { text-align: center; color: #888; padding: 40px 0; }
+    .err { color: #c92a2a; font-size: .9rem; margin: -8px 0 12px; }
+    .loading { text-align: center; color: #888; padding: 32px 0; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    @media (max-width: 540px) { .row2 { grid-template-columns: 1fr; } }
+    h2.section-title { font-size: 1.1rem; margin: 0 0 16px; }
+    .count-badge { font-size: .8rem; background: #e5e7eb; color: #444; border-radius: 999px; padding: 2px 8px; margin-left: 6px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- populated by JS -->
+</div>
+<div id="toast"></div>
+
+<script src="config.js" onerror=""></script>
+<script>
+// ============================================================
+// Config — filled in from env via Vercel or window global
+// ============================================================
+var SUPABASE_URL      = window.__ADMIN_SUPABASE_URL__     || '';
+var SUPABASE_ANON_KEY = window.__ADMIN_SUPABASE_ANON_KEY__ || '';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  document.getElementById('app').innerHTML =
+    '<div style="padding:48px;text-align:center;color:#c92a2a;font-size:1.1rem">' +
+    '<strong>Admin not configured.</strong><br><br>' +
+    'Create <code>admin/config.js</code> (see SETUP.md) and reload.' +
+    '</div>';
+}
+
+// ============================================================
+// Supabase REST helpers
+// ============================================================
+var _token = null; // JWT from Supabase Auth
+
+function authHeaders() {
+  var h = { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' };
+  if (_token) h['Authorization'] = 'Bearer ' + _token;
+  else h['Authorization'] = 'Bearer ' + SUPABASE_ANON_KEY;
+  return h;
+}
+
+function sbFetch(method, path, body, extra) {
+  var opts = { method: method, headers: Object.assign({}, authHeaders(), extra || {}) };
+  if (body !== undefined && body !== null) opts.body = JSON.stringify(body);
+  return fetch(SUPABASE_URL + '/rest/v1' + path, opts).then(function (r) {
+    return r.text().then(function (t) {
+      if (!r.ok) throw new Error(t || r.status);
+      return t ? JSON.parse(t) : null;
+    });
+  });
+}
+
+function authFetch(method, path, body) {
+  return fetch(SUPABASE_URL + '/auth/v1' + path, {
+    method: method,
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).then(function (r) {
+    return r.json().then(function (d) {
+      if (!r.ok) throw new Error(d.error_description || d.msg || 'Auth error');
+      return d;
+    });
+  });
+}
+
+// ============================================================
+// State
+// ============================================================
+var state = {
+  session:    null,
+  tab:        'sermons',  // 'sermons' | 'series' | 'speakers'
+  sermons:    [],
+  series:     [],
+  speakers:   [],
+  mediaLinks: {},    // sermon_id -> [links]
+  search:     '',
+  filterBook: '',
+  loading:    false,
+  modal:      null,  // { type: 'sermon'|'series'|'speaker'|'confirm', data: {...} }
+};
+
+// ============================================================
+// Toast
+// ============================================================
+var _toastTimer = null;
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function () { el.classList.remove('show'); }, 3000);
+}
+
+// ============================================================
+// Auth
+// ============================================================
+function signIn(email, pw) {
+  return authFetch('POST', '/token?grant_type=password', { email: email, password: pw })
+    .then(function (d) {
+      _token = d.access_token;
+      state.session = { email: email, token: d.access_token };
+      render();
+      loadAll();
+    });
+}
+
+function signOut() {
+  _token = null;
+  state.session = null;
+  state.sermons = [];
+  state.series = [];
+  state.speakers = [];
+  render();
+}
+
+// ============================================================
+// Data loading
+// ============================================================
+function loadAll() {
+  state.loading = true;
+  render();
+  Promise.all([loadSermons(), loadSeries(), loadSpeakers()])
+    .then(function () { state.loading = false; render(); })
+    .catch(function (e) { state.loading = false; toast('Error loading data: ' + e.message); render(); });
+}
+
+function loadSermons() {
+  return sbFetch('GET', '/sermons?select=*&order=date.desc,title.asc', null,
+    { 'Prefer': 'count=exact' }
+  ).then(function (rows) {
+    state.sermons = rows || [];
+    var ids = state.sermons.map(function (s) { return s.id; });
+    if (!ids.length) return;
+    return sbFetch('GET', '/media_links?sermon_id=in.(' + ids.join(',') + ')&select=*&order=sort_order.asc')
+      .then(function (links) {
+        var map = {};
+        (links || []).forEach(function (l) {
+          if (!map[l.sermon_id]) map[l.sermon_id] = [];
+          map[l.sermon_id].push(l);
+        });
+        state.mediaLinks = map;
+      });
+  });
+}
+
+function loadSeries() {
+  return sbFetch('GET', '/series?select=*&order=book_slug.asc,name.asc')
+    .then(function (rows) { state.series = rows || []; });
+}
+
+function loadSpeakers() {
+  return sbFetch('GET', '/speakers?select=*&order=name.asc')
+    .then(function (rows) { state.speakers = rows || []; });
+}
+
+// ============================================================
+// Render
+// ============================================================
+function render() {
+  var app = document.getElementById('app');
+  if (!state.session) {
+    app.innerHTML = renderLogin();
+    bindLogin();
+    return;
+  }
+  app.innerHTML = renderShell();
+  bindShell();
+}
+
+function renderLogin() {
+  return '<div id="login-screen"><div class="login-card">' +
+    '<h2>Sermon Admin</h2>' +
+    '<p>Sign in to manage the sermon library.</p>' +
+    '<div id="login-err" class="err"></div>' +
+    '<label>Email</label>' +
+    '<input id="l-email" type="email" autocomplete="username" placeholder="pastor@example.com">' +
+    '<label>Password</label>' +
+    '<input id="l-pw" type="password" autocomplete="current-password">' +
+    '<button class="btn btn-primary" id="l-btn" style="width:100%" onclick="doLogin()">Sign In</button>' +
+    '</div></div>';
+}
+
+function bindLogin() {
+  document.querySelectorAll('#l-email, #l-pw').forEach(function (el) {
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  });
+}
+
+function doLogin() {
+  var email = document.getElementById('l-email').value.trim();
+  var pw    = document.getElementById('l-pw').value;
+  var btn   = document.getElementById('l-btn');
+  var err   = document.getElementById('login-err');
+  err.textContent = '';
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+  signIn(email, pw).catch(function (e) {
+    err.textContent = e.message || 'Sign in failed.';
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+  });
+}
+
+function renderShell() {
+  var modal = state.modal ? renderModal() : '';
+  return '<header>' +
+    '<h1>Sermon Admin</h1>' +
+    '<div class="user-info"><span>' + escHtml(state.session.email) + '</span>' +
+    '<button class="btn btn-logout" onclick="signOut()">Sign out</button></div>' +
+    '</header>' +
+    '<div class="page">' +
+    '<div class="tabs">' +
+    tabBtn('sermons', 'Sermons', state.sermons.length) +
+    tabBtn('series', 'Series', state.series.length) +
+    tabBtn('speakers', 'Speakers', state.speakers.length) +
+    '</div>' +
+    (state.loading ? '<div class="loading">Loading…</div>' : renderTab()) +
+    '</div>' + modal;
+}
+
+function tabBtn(id, label, count) {
+  return '<button class="tab' + (state.tab === id ? ' active' : '') +
+    '" onclick="setTab(\'' + id + '\')">' + label +
+    '<span class="count-badge">' + count + '</span></button>';
+}
+
+function setTab(t) { state.tab = t; render(); }
+
+function renderTab() {
+  if (state.tab === 'sermons')  return renderSermons();
+  if (state.tab === 'series')   return renderSeries();
+  if (state.tab === 'speakers') return renderSpeakers();
+  return '';
+}
+
+// ---- Sermons tab ----
+function renderSermons() {
+  var filtered = state.sermons.filter(function (s) {
+    var q = state.search.toLowerCase();
+    if (q && !s.title.toLowerCase().includes(q) &&
+        !(s.passage || '').toLowerCase().includes(q) &&
+        !(s.book_slug || '').toLowerCase().includes(q)) return false;
+    if (state.filterBook && s.book_slug !== state.filterBook) return false;
+    return true;
+  });
+
+  // Unique books for filter
+  var books = [];
+  state.sermons.forEach(function (s) { if (books.indexOf(s.book_slug) < 0) books.push(s.book_slug); });
+  books.sort();
+
+  var bookOptions = '<option value="">All books</option>' +
+    books.map(function (b) {
+      return '<option value="' + escAttr(b) + '"' + (state.filterBook === b ? ' selected' : '') + '>' + escHtml(b) + '</option>';
+    }).join('');
+
+  var rows = filtered.map(renderSermonRow).join('');
+
+  return '<div class="card">' +
+    '<div class="toolbar">' +
+    '<input type="search" id="search-box" placeholder="Search sermons…" value="' + escAttr(state.search) + '" oninput="setSearch(this.value)">' +
+    '<select id="book-filter" onchange="setBookFilter(this.value)">' + bookOptions + '</select>' +
+    '<button class="btn btn-primary btn-sm" onclick="openAddSermon()">+ Add Sermon</button>' +
+    '</div>' +
+    (filtered.length === 0 ? '<div class="empty">No sermons found.</div>' : rows) +
+    '</div>';
+}
+
+function setSearch(v)     { state.search = v;     render(); }
+function setBookFilter(v) { state.filterBook = v; render(); }
+
+function renderSermonRow(s) {
+  var links = state.mediaLinks[s.id] || [];
+  var mediaInfo = links.length > 0
+    ? links.map(function (l) { return '<a href="' + escAttr(l.url) + '" target="_blank" style="font-size:.8rem;color:#3b5bdb">' + escHtml(l.provider || 'link') + '</a>'; }).join(' ')
+    : '<span style="color:#aaa;font-size:.8rem">no media</span>';
+  var badge = s.published
+    ? '<span class="badge badge-published">published</span>'
+    : '<span class="badge badge-unpublished">draft</span>';
+  return '<div class="sermon-row">' +
+    '<div class="sermon-info">' +
+    '<div class="sermon-title">' + escHtml(s.title) + badge + '</div>' +
+    '<div class="sermon-meta">' + escHtml(s.book_slug) + (s.passage ? ' · ' + escHtml(s.passage) : '') +
+    (s.date ? ' · ' + escHtml(s.date) : '') + ' · ' + mediaInfo + '</div>' +
+    '</div>' +
+    '<div class="sermon-actions">' +
+    '<button class="btn btn-ghost btn-sm" onclick="openEditSermon(\'' + s.id + '\')">Edit</button>' +
+    '<button class="btn btn-ghost btn-sm" onclick="togglePublish(\'' + s.id + '\',' + s.published + ')">' +
+    (s.published ? 'Unpublish' : 'Publish') + '</button>' +
+    '<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'' + s.id + '\',\'sermon\')">Delete</button>' +
+    '</div></div>';
+}
+
+// ---- Series tab ----
+function renderSeries() {
+  var rows = state.series.map(function (s) {
+    return '<div class="sermon-row">' +
+      '<div class="sermon-info">' +
+      '<div class="sermon-title">' + escHtml(s.name) + '</div>' +
+      '<div class="sermon-meta">' + escHtml(s.book_slug || '') +
+      (s.subtitle ? ' · ' + escHtml(s.subtitle) : '') + '</div>' +
+      '</div>' +
+      '<div class="sermon-actions">' +
+      '<button class="btn btn-ghost btn-sm" onclick="openEditSeries(\'' + s.id + '\')">Edit</button>' +
+      '<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'' + s.id + '\',\'series\')">Delete</button>' +
+      '</div></div>';
+  }).join('');
+  return '<div class="card">' +
+    '<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openAddSeries()">+ Add Series</button></div>' +
+    (state.series.length === 0 ? '<div class="empty">No series yet.</div>' : rows) +
+    '</div>';
+}
+
+// ---- Speakers tab ----
+function renderSpeakers() {
+  var rows = state.speakers.map(function (sp) {
+    return '<div class="sermon-row">' +
+      '<div class="sermon-info"><div class="sermon-title">' + escHtml(sp.name) + '</div></div>' +
+      '<div class="sermon-actions">' +
+      '<button class="btn btn-ghost btn-sm" onclick="openEditSpeaker(\'' + sp.id + '\')">Edit</button>' +
+      '<button class="btn btn-danger btn-sm" onclick="confirmDelete(\'' + sp.id + '\',\'speaker\')">Delete</button>' +
+      '</div></div>';
+  }).join('');
+  return '<div class="card">' +
+    '<div class="toolbar"><button class="btn btn-primary btn-sm" onclick="openAddSpeaker()">+ Add Speaker</button></div>' +
+    (state.speakers.length === 0 ? '<div class="empty">No speakers yet.</div>' : rows) +
+    '</div>';
+}
+
+// ============================================================
+// Modal
+// ============================================================
+function renderModal() {
+  var m = state.modal;
+  if (m.type === 'confirm') return renderConfirmModal(m);
+  if (m.type === 'sermon')  return renderSermonModal(m);
+  if (m.type === 'series')  return renderSeriesModal(m);
+  if (m.type === 'speaker') return renderSpeakerModal(m);
+  return '';
+}
+
+function renderConfirmModal(m) {
+  return '<div class="overlay" onclick="closeModal(event)">' +
+    '<div class="modal">' +
+    '<h2>Confirm Delete</h2>' +
+    '<p>' + escHtml(m.message) + '</p>' +
+    '<div class="modal-footer">' +
+    '<button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>' +
+    '<button class="btn btn-danger" onclick="doDelete()">Delete</button>' +
+    '</div></div></div>';
+}
+
+function renderSermonModal(m) {
+  var d = m.data || {};
+  var isEdit = !!d.id;
+
+  var speakerOpts = '<option value="">— none —</option>' +
+    state.speakers.map(function (sp) {
+      return '<option value="' + escAttr(sp.id) + '"' + (d.speaker_id === sp.id ? ' selected' : '') + '>' + escHtml(sp.name) + '</option>';
+    }).join('');
+
+  var seriesOpts = '<option value="">— none —</option>' +
+    state.series.map(function (s) {
+      return '<option value="' + escAttr(s.id) + '"' + (d.series_id === s.id ? ' selected' : '') + '>' + escHtml(s.name) + (s.book_slug ? ' (' + s.book_slug + ')' : '') + '</option>';
+    }).join('');
+
+  var mediaRows = '';
+  var existingLinks = d.id ? (state.mediaLinks[d.id] || []) : [];
+  existingLinks.forEach(function (l, i) {
+    mediaRows += mediaRow(i, l.url, l.provider || '', l.id);
+  });
+  // One empty row to add
+  mediaRows += mediaRow(existingLinks.length, '', '', '');
+
+  return '<div class="overlay" onclick="closeModal(event)">' +
+    '<div class="modal" onclick="event.stopPropagation()">' +
+    '<h2>' + (isEdit ? 'Edit Sermon' : 'Add Sermon') + '</h2>' +
+    '<div id="modal-err" class="err"></div>' +
+    '<label>Title *</label><input id="m-title" value="' + escAttr(d.title || '') + '">' +
+    '<label>Book slug *</label><input id="m-book" placeholder="e.g. 1-corinthians" value="' + escAttr(d.book_slug || '') + '">' +
+    '<div class="row2">' +
+    '<div><label>Passage</label><input id="m-passage" placeholder="e.g. Romans 8:1–4" value="' + escAttr(d.passage || '') + '"></div>' +
+    '<div><label>Date</label><input id="m-date" type="date" value="' + escAttr(d.date || '') + '"></div>' +
+    '</div>' +
+    '<div class="row2">' +
+    '<div><label>Speaker</label><select id="m-speaker">' + speakerOpts + '</select></div>' +
+    '<div><label>Series</label><select id="m-series">' + seriesOpts + '</select></div>' +
+    '</div>' +
+    '<label>Published</label>' +
+    '<input type="checkbox" id="m-published" style="width:auto;margin-bottom:16px"' + (d.published ? ' checked' : '') + '>' +
+    '<label>Media Links</label>' +
+    '<div id="media-rows">' + mediaRows + '</div>' +
+    '<button class="btn btn-ghost btn-sm" onclick="addMediaRow()" style="margin-bottom:16px">+ Add media link</button>' +
+    '<div class="modal-footer">' +
+    '<button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>' +
+    '<button class="btn btn-primary" onclick="saveSermon(\'' + (d.id || '') + '\')">' + (isEdit ? 'Save' : 'Add') + '</button>' +
+    '</div></div></div>';
+}
+
+function mediaRow(i, url, provider, linkId) {
+  return '<div class="media-row" id="mr-' + i + '">' +
+    '<input placeholder="https://..." value="' + escAttr(url) + '" data-link-id="' + escAttr(linkId) + '" style="flex:1">' +
+    '<select style="width:140px;margin-bottom:0">' +
+    ['soundcloud','youtube','vimeo','other'].map(function (p) {
+      return '<option value="' + p + '"' + (provider === p ? ' selected' : '') + '>' + p + '</option>';
+    }).join('') +
+    '</select>' +
+    '<button class="btn btn-ghost btn-sm" onclick="removeMediaRow(this)" style="flex-shrink:0">×</button>' +
+    '</div>';
+}
+
+function addMediaRow() {
+  var container = document.getElementById('media-rows');
+  var i = container.children.length;
+  var div = document.createElement('div');
+  div.innerHTML = mediaRow(i, '', 'soundcloud', '');
+  container.appendChild(div.firstChild);
+}
+
+function removeMediaRow(btn) {
+  btn.closest('.media-row').remove();
+}
+
+function renderSeriesModal(m) {
+  var d = m.data || {};
+  return '<div class="overlay" onclick="closeModal(event)">' +
+    '<div class="modal" onclick="event.stopPropagation()">' +
+    '<h2>' + (d.id ? 'Edit Series' : 'Add Series') + '</h2>' +
+    '<div id="modal-err" class="err"></div>' +
+    '<label>Name *</label><input id="s-name" value="' + escAttr(d.name || '') + '">' +
+    '<label>Book slug</label><input id="s-book" placeholder="e.g. romans" value="' + escAttr(d.book_slug || '') + '">' +
+    '<label>Subtitle</label><input id="s-sub" value="' + escAttr(d.subtitle || '') + '">' +
+    '<div class="modal-footer">' +
+    '<button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>' +
+    '<button class="btn btn-primary" onclick="saveSeries(\'' + (d.id || '') + '\')">' + (d.id ? 'Save' : 'Add') + '</button>' +
+    '</div></div></div>';
+}
+
+function renderSpeakerModal(m) {
+  var d = m.data || {};
+  return '<div class="overlay" onclick="closeModal(event)">' +
+    '<div class="modal" onclick="event.stopPropagation()">' +
+    '<h2>' + (d.id ? 'Edit Speaker' : 'Add Speaker') + '</h2>' +
+    '<div id="modal-err" class="err"></div>' +
+    '<label>Name *</label><input id="sp-name" value="' + escAttr(d.name || '') + '">' +
+    '<div class="modal-footer">' +
+    '<button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>' +
+    '<button class="btn btn-primary" onclick="saveSpeaker(\'' + (d.id || '') + '\')">' + (d.id ? 'Save' : 'Add') + '</button>' +
+    '</div></div></div>';
+}
+
+// ============================================================
+// Modal openers
+// ============================================================
+function openAddSermon()  { state.modal = { type: 'sermon', data: {} }; render(); }
+function openEditSermon(id) {
+  var s = state.sermons.find(function (x) { return x.id === id; });
+  if (s) { state.modal = { type: 'sermon', data: Object.assign({}, s) }; render(); }
+}
+function openAddSeries()   { state.modal = { type: 'series', data: {} }; render(); }
+function openEditSeries(id) {
+  var s = state.series.find(function (x) { return x.id === id; });
+  if (s) { state.modal = { type: 'series', data: Object.assign({}, s) }; render(); }
+}
+function openAddSpeaker()  { state.modal = { type: 'speaker', data: {} }; render(); }
+function openEditSpeaker(id) {
+  var s = state.speakers.find(function (x) { return x.id === id; });
+  if (s) { state.modal = { type: 'speaker', data: Object.assign({}, s) }; render(); }
+}
+function confirmDelete(id, type) {
+  state.modal = {
+    type: 'confirm',
+    message: 'Are you sure you want to delete this ' + type + '? This cannot be undone.',
+    deleteId: id, deleteType: type,
+  };
+  render();
+}
+function closeModal(e) { if (e && e.target !== e.currentTarget) return; closeModalNow(); }
+function closeModalNow() { state.modal = null; render(); }
+
+// ============================================================
+// CRUD actions
+// ============================================================
+function doDelete() {
+  var id   = state.modal.deleteId;
+  var type = state.modal.deleteType;
+  var endpoint = type === 'sermon' ? '/sermons' : type === 'series' ? '/series' : '/speakers';
+  sbFetch('DELETE', endpoint + '?id=eq.' + id).then(function () {
+    closeModalNow();
+    toast('Deleted.');
+    loadAll();
+  }).catch(function (e) { toast('Error: ' + e.message); });
+}
+
+function saveSermon(id) {
+  var title    = (document.getElementById('m-title').value || '').trim();
+  var bookSlug = (document.getElementById('m-book').value  || '').trim();
+  var passage  = (document.getElementById('m-passage').value || '').trim();
+  var date     = document.getElementById('m-date').value || null;
+  var speakerId = document.getElementById('m-speaker').value || null;
+  var seriesId  = document.getElementById('m-series').value  || null;
+  var published = document.getElementById('m-published').checked;
+
+  var errEl = document.getElementById('modal-err');
+  if (!title)    { errEl.textContent = 'Title is required.'; return; }
+  if (!bookSlug) { errEl.textContent = 'Book slug is required.'; return; }
+
+  var body = {
+    title: title, book_slug: bookSlug,
+    passage:    passage  || null,
+    date:       date     || null,
+    speaker_id: speakerId || null,
+    series_id:  seriesId  || null,
+    published:  published,
+  };
+
+  var saveP = id
+    ? sbFetch('PATCH', '/sermons?id=eq.' + id, body, { 'Prefer': 'return=representation' })
+    : sbFetch('POST',  '/sermons',              body, { 'Prefer': 'return=representation' });
+
+  saveP.then(function (rows) {
+    var sermonId = id || (rows && rows[0] && rows[0].id);
+    // Collect media rows
+    var mRows = document.querySelectorAll('#media-rows .media-row');
+    var toSave = [];
+    mRows.forEach(function (row) {
+      var urlInput      = row.querySelector('input');
+      var providerSelect = row.querySelector('select');
+      var linkId        = urlInput.getAttribute('data-link-id');
+      var url           = (urlInput.value || '').trim();
+      if (url) toSave.push({ url: url, provider: providerSelect.value, linkId: linkId });
+    });
+
+    // Delete existing links for this sermon then insert new ones
+    var deleteP = sermonId
+      ? sbFetch('DELETE', '/media_links?sermon_id=eq.' + sermonId)
+      : Promise.resolve();
+
+    deleteP.then(function () {
+      var insertPromises = toSave.map(function (l, i) {
+        return sbFetch('POST', '/media_links', {
+          sermon_id: sermonId, url: l.url, provider: l.provider, sort_order: i,
+        }, { 'Prefer': 'return=minimal' });
+      });
+      return Promise.all(insertPromises);
+    }).then(function () {
+      closeModalNow();
+      toast(id ? 'Sermon saved.' : 'Sermon added.');
+      loadAll();
+    });
+  }).catch(function (e) {
+    document.getElementById('modal-err').textContent = 'Error: ' + e.message;
+  });
+}
+
+function saveSeries(id) {
+  var name    = (document.getElementById('s-name').value || '').trim();
+  var bookSlug = (document.getElementById('s-book').value || '').trim();
+  var subtitle = (document.getElementById('s-sub').value  || '').trim();
+  var errEl    = document.getElementById('modal-err');
+  if (!name) { errEl.textContent = 'Name is required.'; return; }
+  var body = { name: name, book_slug: bookSlug || null, subtitle: subtitle || null };
+  var p = id
+    ? sbFetch('PATCH', '/series?id=eq.' + id, body, { 'Prefer': 'return=minimal' })
+    : sbFetch('POST',  '/series',             body, { 'Prefer': 'return=minimal' });
+  p.then(function () { closeModalNow(); toast(id ? 'Series saved.' : 'Series added.'); loadAll(); })
+   .catch(function (e) { document.getElementById('modal-err').textContent = 'Error: ' + e.message; });
+}
+
+function saveSpeaker(id) {
+  var name  = (document.getElementById('sp-name').value || '').trim();
+  var errEl = document.getElementById('modal-err');
+  if (!name) { errEl.textContent = 'Name is required.'; return; }
+  var p = id
+    ? sbFetch('PATCH', '/speakers?id=eq.' + id, { name: name }, { 'Prefer': 'return=minimal' })
+    : sbFetch('POST',  '/speakers',              { name: name }, { 'Prefer': 'return=minimal' });
+  p.then(function () { closeModalNow(); toast(id ? 'Speaker saved.' : 'Speaker added.'); loadAll(); })
+   .catch(function (e) { document.getElementById('modal-err').textContent = 'Error: ' + e.message; });
+}
+
+function togglePublish(id, current) {
+  sbFetch('PATCH', '/sermons?id=eq.' + id, { published: !current }, { 'Prefer': 'return=minimal' })
+    .then(function () { toast(current ? 'Unpublished.' : 'Published.'); loadAll(); })
+    .catch(function (e) { toast('Error: ' + e.message); });
+}
+
+// ============================================================
+// Shell binding
+// ============================================================
+function bindShell() {}
+
+// ============================================================
+// Utility
+// ============================================================
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s == null ? '' : s).replace(/"/g,'&quot;'); }
+
+// ============================================================
+// Boot
+// ============================================================
+render();
+</script>
+</body>
+</html>
