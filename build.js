@@ -186,7 +186,7 @@ function updateLibrary(latestSermon) {
   let html = fs.readFileSync(libraryPath, 'utf8');
   const formattedDate = formatDate(latestSermon.date);
   // Target the specific recent-link anchor by id
-  html = html.replace(/<a id="recent-link" href="[^"]*">/, `<a id="recent-link" href="${latestSermon.url}">`);
+  html = html.replace(/<a id="recent-link"[^>]*href="[^"]*">/, `<a id="recent-link" data-loading="true" href="${latestSermon.url}">`);
   html = html.replace(/<div class="recent-title"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-title" id="recent-title">\n                    ${latestSermon.title}\n                </div>`);
   html = html.replace(/<div class="scripture"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="scripture" id="recent-passage">\n                    ${latestSermon.passage}\n                </div>`);
   html = html.replace(/<div class="recent-date"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-date" id="recent-date">\n                    ${formattedDate}\n                </div>`);
