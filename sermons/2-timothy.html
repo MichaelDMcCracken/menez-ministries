@@ -42,7 +42,9 @@
 
         function parsePassageRef(passage) {
             if (!passage) return { chapter: Infinity, verse: Infinity };
-            var m = passage.match(/(\d+)(?::(\d+))?/);
+            // Match the chapter (and optional verse) that follows the book name.
+            // Using \s as a prefix skips a leading book-number like "1" in "1 Corinthians 2:5".
+            var m = passage.match(/\s(\d+)(?::(\d+))?/);
             if (!m) return { chapter: Infinity, verse: Infinity };
             return { chapter: Number(m[1]), verse: m[2] ? Number(m[2]) : 1 };
         }
