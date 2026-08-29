@@ -126,11 +126,14 @@
         var titleEl  = document.getElementById('recent-title');
         var passEl   = document.getElementById('recent-passage');
         var dateEl   = document.getElementById('recent-date');
+        var didShow  = false;
         if (linkEl) linkEl.style.visibility = 'hidden';
 
         function showRecent() {
-          if (linkEl) linkEl.style.visibility = '';
-          if (linkEl) linkEl.removeAttribute('data-loading');
+          if (didShow || !linkEl) return;
+          didShow = true;
+          linkEl.style.visibility = '';
+          linkEl.removeAttribute('data-loading');
         }
 
         var config = window.__SUPABASE_CONFIG__;
