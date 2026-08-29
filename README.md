@@ -1,188 +1,123 @@
 # Menez Ministries Sermon Site
 
-This repository contains a static sermon website plus a local admin UI for adding and editing sermons, building the generated pages, and pushing updates to a GitHub repository.
+A static sermon library hosted on GitHub Pages. Sermon data is managed through a hosted Supabase CMS, so changes made in the admin dashboard are reflected live on the public site with no rebuild or Git push required.
 
-## Overview
+## Architecture
 
-- `admin.html` is the local admin interface for adding or updating sermon entries.
-- `admin-server.js` runs a local server to support the admin page and perform build/push actions.
-- `build.js` generates the static site files.
-- `sermons-data.json` stores the sermon metadata.
-- `package.json` defines the Node scripts and dependencies.
+| Component | Description |
+|---|---|
+| `index.html` / `library.html` | Public-facing static pages (GitHub Pages) |
+| `sermons/*.html` | Per-book sermon list pages – fetch data dynamically from Supabase |
+| `admin.html` | Admin dashboard – authenticates via Supabase Auth and performs CRUD |
+| `supabase-config.js` | Supabase project URL and anon key (edit before deploying) |
+| `supabase/migrations/` | SQL migrations to apply in your Supabase project |
+| `generate-book-pages.js` | One-time script to regenerate dynamic book page shells |
 
-## Prerequisites
+---
 
-The machine you are installing on must have:
+## First-time Supabase Setup
 
-- A GitHub account
-- Git installed
-- Node.js and npm installed
-- A terminal or command prompt
+### 1 · Create a Supabase project
 
-If the machine does not have these installed yet, install them first.
+1. Sign in at [supabase.com](https://supabase.com/) and create a new project.
+2. Note your **Project URL** and **anon / public API key** from  
+   *Project Settings → API*.
 
-### Install Git
+### 2 · Apply the database schema
 
-1. Download Git from https://git-scm.com/downloads
-2. Install Git using the installer for macOS, Windows, or Linux.
-3. Verify installation:
+Open the Supabase SQL editor (*Database → SQL Editor*) and run the contents of:
 
-```bash
-git --version
+```
+supabase/migrations/001_initial_schema.sql
 ```
 
-### Install Node.js and npm
+### 3 · Import existing sermon data
 
-1. Download Node.js from https://nodejs.org/
-2. Install the current LTS version.
-3. Verify installation:
+Still in the SQL editor, run:
 
-```bash
-node --version
-npm --version
+```
+supabase/migrations/002_seed_sermons.sql
 ```
 
-### GitHub account
+This inserts all 577 sermons migrated from the original `sermons-data.json`.
 
-If you do not already have a GitHub account:
+### 4 · Create an admin user
 
-1. Sign up at https://github.com/
-2. Set up GitHub authentication for cloning and pushing.
+In Supabase go to *Authentication → Users → Add user* and create an account  
+with an email and password. This is the only account that can sign in to  
+`admin.html`.
 
-#### HTTPS access
+### 5 · Add your credentials to `supabase-config.js`
 
-1. Use your GitHub username and password, or a personal access token if prompted.
-2. You can clone via HTTPS with:
+Edit `supabase-config.js` and replace the placeholder values:
 
-```bash
-git clone https://github.com/<username>/<repo-name>.git
+```js
+const SUPABASE_URL      = 'https://xxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJ...';
 ```
 
-3. If you want to avoid repeated credential prompts, configure a credential helper:
+Both values are safe to commit; Row Level Security (RLS) ensures anonymous  
+visitors can only read data, and only authenticated admin users can write.
+
+### 6 · Deploy / push to GitHub Pages
+
+Commit and push. GitHub Pages will serve the updated site automatically.
+
+---
+
+## Adding or editing sermons
+
+1. Open `admin.html` (hosted at your GitHub Pages URL or locally in a browser).
+2. Sign in with your Supabase admin credentials.
+3. Select a book slug (or type a new one) and fill in the sermon details.
+4. Click **Save sermon**. The change is written to Supabase immediately.
+5. The public site reads live from Supabase – no rebuild needed.
+
+---
+
+## Adding a new book
+
+If you add sermons for a book that does not yet have its own page under  
+`sermons/`, run the generator script once to create the dynamic HTML shell:
 
 ```bash
-git config --global credential.helper cache
+node generate-book-pages.js
 ```
 
-#### SSH access
+Then commit and push the new file to GitHub Pages.
 
-1. Generate an SSH key if you do not already have one:
+---
 
-```bash
-ssh-keygen -t ed25519 -C "your_email@example.com"
-```
+## Row Level Security summary
 
-2. Copy the public key and add it to GitHub: https://github.com/settings/keys
+| Role | SELECT | INSERT / UPDATE / DELETE |
+|---|---|---|
+| `anon` (public) | ✅ | ❌ |
+| `authenticated` (admin) | ✅ | ✅ |
 
-```bash
-cat ~/.ssh/id_ed25519.pub
-```
+Policies are defined in `supabase/migrations/001_initial_schema.sql`.
 
-3. Test SSH access:
+---
 
-```bash
-ssh -T git@github.com
-```
+## File reference
 
-4. Clone via SSH with:
+| File | Purpose |
+|---|---|
+| `supabase-config.js` | Supabase URL + anon key – **edit this** |
+| `supabase/migrations/001_initial_schema.sql` | Creates `sermons` table + RLS policies |
+| `supabase/migrations/002_seed_sermons.sql` | Seeds all existing sermons |
+| `admin.html` | Hosted admin dashboard (Supabase Auth + CRUD) |
+| `generate-book-pages.js` | Regenerates dynamic `sermons/*.html` shells |
+| `library.html` | Public sermon library index |
+| `sermons/*.html` | Per-book dynamic sermon list pages |
 
-```bash
-git clone git@github.com:<username>/<repo-name>.git
-```
+---
 
-#### Verify GitHub access
+## Legacy files (kept for reference, no longer active)
 
-After configuring HTTPS or SSH, verify you can clone and push to GitHub from the machine.
-
-## Clone the Repository
-
-Open a terminal and run one of the following:
-
-HTTPS:
-
-```bash
-git clone https://github.com/<username>/<repo-name>.git
-```
-
-SSH:
-
-```bash
-git clone git@github.com:<username>/<repo-name>.git
-```
-
-cd menez-ministries
-
-If you already have the repository locally, just `cd` into the folder.
-
-## Install Dependencies
-
-From the repository root:
-
-```bash
-npm install
-```
-
-This installs the dependencies declared in `package.json`.
-
-## Run the Admin Interface
-
-Start the admin server:
-
-```bash
-npm run admin
-```
-
-Then open `admin.html` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
-
-- Add or edit sermon entries
-- Save changes to `sermons-data.json`
-- Build generated pages
-- Build and push updates automatically
-
-## Using the Admin UI
-
-1. In the admin page, choose an existing book slug or add a new one.
-2. Enter sermon details: title, passage, date, and audio URL.
-3. Click **Save sermon**.
-4. After saving, use either:
-   - **Build now** to regenerate the site files locally, or
-   - **Build & Push** to build, commit, and push the changes to the repository.
-
-## Manual Build Commands
-
-If you need to run build commands from the terminal instead of using the admin page:
-
-```bash
-npm run build
-```
-
-This regenerates the site files from the current `sermons-data.json`.
-
-## Build & Push
-
-The admin UI includes a **Build & Push** button that will:
-
-1. Run `npm run build`
-2. Stage the generated site files and `sermons-data.json`
-3. Commit the changes with the provided commit message
-4. Push the commit to the repository remote
-
-If you prefer to do this manually in the terminal, use Git commands after building:
-
-```bash
-git add sermons-data.json library.html sermons
-git commit -m "Update sermons and generated pages"
-git push
-```
-
-## Notes
-
-- The repo includes a `CNAME` file and generated `sermons/` pages.
-- If you are installing on a new machine, make sure your GitHub credentials are configured so `git push` succeeds.
-- If the admin page does not show the success message immediately, refresh the page and verify the local server is running.
-
-## Troubleshooting
-
-- If `npm install` fails, confirm Node.js and npm are installed correctly.
-- If `git push` fails, check your Git remote, branch, and authentication settings.
-- If the admin server does not start, ensure `admin-server.js` is present and the port is not blocked.
+| File | Description |
+|---|---|
+| `admin-server.js` | Old local Node.js admin server |
+| `build.js` | Old static site generator |
+| `extract-sermons.js` | Old scraper utility |
+| `sermons-data.json` | Original flat-file data store (source for seed migration) |

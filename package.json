@@ -1,12 +1,9 @@
 {
   "name": "menez-ministries",
-  "version": "1.0.0",
-  "description": "Sermon library website",
-  "main": "build.js",
+  "version": "2.0.0",
+  "description": "Sermon library website – data managed via Supabase CMS",
   "scripts": {
-    "build": "node build.js",
-    "admin": "node admin-server.js",
-    "extract": "node extract-sermons.js"
+    "generate-pages": "node generate-book-pages.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0"

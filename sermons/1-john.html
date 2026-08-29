@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <title>Sermons from 1 John</title>
     <meta charset="UTF-8">
@@ -18,36 +17,96 @@
             <h3>Pastor Scott Menez</h3>
         </div>
     </a>
-    <main>
-        <h1>Sermons from 1 John</h1>
-        
-        <hr>
-        <table style="margin-left:auto; margin-right: auto;">
-            <thead>
-                <tr>
-                    <th>Passage</th>
-                    <th>Title</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1 John 4:9–10</td>
-                    <td><a href="https://soundcloud.com/user-440517750/christmas-a-display-of-gods-divine-love">Christmas: A Display of God's Divine Love</a></td>
-                </tr>
-                <tr>
-                    <td>1 John 4:11–13</td>
-                    <td><a href="https://soundcloud.com/user-440517750/love-without-limits-2022-challenge-to-rcc-part-1">Love Without Limits (Pt. 1)</a></td>
-                </tr>
-                <tr>
-                    <td>1 John 4:11–13</td>
-                    <td><a href="https://soundcloud.com/user-440517750/love-without-limits-2022-challenge-to-rcc-part-2">Love Without Limits (Pt. 2)</a></td>
-                </tr>
-            </tbody>
-        </table>
+    <main id="main-content">
+        <p>Loading sermons…</p>
     </main>
 </body>
 <footer>
     © 2024 Menez Ministries
 </footer>
+<script src="../supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+    (function () {
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Derive book slug from the current filename (e.g. "1-corinthians.html" → "1-corinthians")
+        const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '');
+
+        function capitalize(str) {
+            return str.split('-').map(function (p) {
+                return p.charAt(0).toUpperCase() + p.slice(1);
+            }).join(' ');
+        }
+
+        function parsePassageRef(passage) {
+            if (!passage) return { chapter: Infinity, verse: Infinity };
+            var m = passage.match(/(\d+)(?::(\d+))?/);
+            if (!m) return { chapter: Infinity, verse: Infinity };
+            return { chapter: Number(m[1]), verse: m[2] ? Number(m[2]) : 1 };
+        }
+
+        function sortSermons(sermons) {
+            return sermons.slice().sort(function (a, b) {
+                var ra = parsePassageRef(a.passage);
+                var rb = parsePassageRef(b.passage);
+                if (ra.chapter !== rb.chapter) return ra.chapter - rb.chapter;
+                return ra.verse - rb.verse;
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        async function load() {
+            var main = document.getElementById('main-content');
+            var bookTitle = capitalize(slug);
+            document.title = 'Sermons from ' + bookTitle;
+
+            var { data: rows, error } = await db
+                .from('sermons')
+                .select('passage, title, url, book_subtitle')
+                .eq('book_slug', slug)
+                .order('id', { ascending: true });
+
+            if (error || !rows || rows.length === 0) {
+                main.innerHTML =
+                    '<h1>Sermons from ' + escapeHtml(bookTitle) + '</h1>' +
+                    '<hr><p>No sermons found for this book.</p>';
+                return;
+            }
+
+            var subtitle = rows[0].book_subtitle || '';
+            var sorted   = sortSermons(rows);
+            var hasPassage = sorted.some(function (s) { return s.passage; });
+
+            var headerCols = hasPassage ? '<th>Passage</th><th>Title</th>' : '<th>Title</th>';
+            var rowsHtml = sorted.map(function (s) {
+                var passageCell = hasPassage
+                    ? '<td>' + escapeHtml(s.passage || '') + '</td>'
+                    : '';
+                return '<tr>' + passageCell +
+                    '<td><a href="' + escapeHtml(s.url) + '">' + escapeHtml(s.title) + '</a></td>' +
+                    '</tr>';
+            }).join('');
+
+            main.innerHTML =
+                '<h1>Sermons from ' + escapeHtml(bookTitle) + '</h1>' +
+                (subtitle ? '<h3>' + escapeHtml(subtitle) + '</h3>' : '') +
+                '<hr>' +
+                '<table style="margin-left:auto; margin-right:auto;">' +
+                '<thead><tr>' + headerCols + '</tr></thead>' +
+                '<tbody>' + rowsHtml + '</tbody>' +
+                '</table>';
+        }
+
+        load();
+    })();
+</script>
 </html>

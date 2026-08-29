@@ -1,7 +1,40 @@
-<!DOCTYPE html>
+/**
+ * generate-book-pages.js
+ *
+ * Generates a lightweight dynamic HTML shell for every book slug that
+ * currently appears in sermons-data.json (plus any additional slugs listed
+ * in library.html that don't have sermons yet).
+ *
+ * Each generated page fetches its sermons live from Supabase at render time,
+ * so no rebuild is needed when sermon data changes in the CMS.
+ *
+ * Run once after setting up Supabase, and whenever you add a new book slug:
+ *   node generate-book-pages.js
+ */
+
+const fs   = require('fs');
+const path = require('path');
+
+const DATA_FILE    = path.join(__dirname, 'sermons-data.json');
+const SERMONS_DIR  = path.join(__dirname, 'sermons');
+
+const data   = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+const slugs  = Object.keys(data).sort();
+
+function capitalize(str) {
+  return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function bookTitle(slug) {
+  return capitalize(slug.replace(/-/g, ' '));
+}
+
+function generateDynamicPage(slug) {
+  const title = bookTitle(slug);
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Sermons from Leviticus</title>
+    <title>Sermons from ${title}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/main.css">
@@ -32,7 +65,7 @@
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Derive book slug from the current filename (e.g. "1-corinthians.html" → "1-corinthians")
-        const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '');
+        const slug = window.location.pathname.split('/').pop().replace(/\\.html$/, '');
 
         function capitalize(str) {
             return str.split('-').map(function (p) {
@@ -42,7 +75,7 @@
 
         function parsePassageRef(passage) {
             if (!passage) return { chapter: Infinity, verse: Infinity };
-            var m = passage.match(/(\d+)(?::(\d+))?/);
+            var m = passage.match(/(\\d+)(?::(\\d+))?/);
             if (!m) return { chapter: Infinity, verse: Infinity };
             return { chapter: Number(m[1]), verse: m[2] ? Number(m[2]) : 1 };
         }
@@ -110,3 +143,15 @@
     })();
 </script>
 </html>
+`;
+}
+
+let count = 0;
+for (const slug of slugs) {
+  const html     = generateDynamicPage(slug);
+  const filePath = path.join(SERMONS_DIR, `${slug}.html`);
+  fs.writeFileSync(filePath, html, 'utf8');
+  console.log(`Generated ${filePath}`);
+  count++;
+}
+console.log(`\nDone. Generated ${count} book page(s).`);

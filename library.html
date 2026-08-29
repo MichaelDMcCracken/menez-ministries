@@ -16,25 +16,8 @@
             <h3>Pastor Scott Menez</h3>
         </div>
         <main>
-            <div class="full-bar">
-                <a href="https://youtu.be/xc4Hl-qT3jE?si=fKvORD3FyLzCHL93">
-                    <div class="recent">
-                        <div class="recent-info">
-                            <div class="recent-label">
-                                Most Recent Sermon
-                            </div>
-                            <div class="recent-title">
-                    What Is Your Role in Christ's Church?
-                </div>
-                            <div class="scripture">
-                    Ephesians 4:14–16
-                </div>
-                        </div>
-                        <div class="recent-date">
-                    JUN 14
-                </div>
-                    </div>
-                </a>
+            <div class="full-bar" id="recent-sermon-bar">
+                <!-- Most recent sermon is loaded dynamically from Supabase -->
             </div>
 
             <h2>Old Testament</h2>
@@ -118,4 +101,56 @@
     <footer>
         © 2025 Menez Ministries
     </footer>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr + 'T00:00:00Z');
+            const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+            const day = date.getUTCDate();
+            return month + ' ' + day;
+        }
+
+        async function loadRecentSermon() {
+            const bar = document.getElementById('recent-sermon-bar');
+            const { data, error } = await db
+                .from('sermons')
+                .select('title, passage, url, date')
+                .not('date', 'is', null)
+                .order('date', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (error || !data) {
+                bar.style.display = 'none';
+                return;
+            }
+
+            bar.innerHTML =
+                '<a href="' + escapeHtml(data.url) + '">' +
+                '<div class="recent">' +
+                '<div class="recent-info">' +
+                '<div class="recent-label">Most Recent Sermon</div>' +
+                '<div class="recent-title">' + escapeHtml(data.title) + '</div>' +
+                '<div class="scripture">' + escapeHtml(data.passage || '') + '</div>' +
+                '</div>' +
+                '<div class="recent-date">' + escapeHtml(formatDate(data.date)) + '</div>' +
+                '</div>' +
+                '</a>';
+        }
+
+        loadRecentSermon();
+    </script>
 </html>

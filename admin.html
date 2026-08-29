@@ -16,27 +16,17 @@
             margin: 0 auto;
             padding: 32px;
         }
-        h1 {
-            margin-bottom: 12px;
-        }
-        .note {
-            margin: 0 0 24px;
-            color: #555;
-            line-height: 1.6;
-        }
+        h1 { margin-bottom: 12px; }
+        .note { margin: 0 0 24px; color: #555; line-height: 1.6; }
         form {
             background: white;
             border: 1px solid #e1e4ea;
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 16px 40px rgba(18, 32, 60, 0.08);
+            box-shadow: 0 16px 40px rgba(18,32,60,.08);
         }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        input, textarea, select {
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input, select {
             width: 100%;
             padding: 12px 14px;
             margin-bottom: 18px;
@@ -47,12 +37,7 @@
             background: #fff;
             box-sizing: border-box;
         }
-        .book-list {
-            margin-bottom: 24px;
-        }
-        .book-list h3 {
-            margin-bottom: 6px;
-        }
+        .book-list { margin-bottom: 24px; }
         .sermon-row {
             display: flex;
             justify-content: space-between;
@@ -63,22 +48,10 @@
             margin-bottom: 10px;
             background: #f8fafc;
         }
-        .sermon-info {
-            min-width: 0;
-        }
-        .sermon-title {
-            font-weight: 600;
-        }
-        .sermon-meta {
-            color: #555;
-            font-size: .95rem;
-            margin-top: 4px;
-        }
-        .sermon-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-        }
+        .sermon-info { min-width: 0; }
+        .sermon-title { font-weight: 600; }
+        .sermon-meta { color: #555; font-size: .95rem; margin-top: 4px; }
+        .sermon-actions { display: flex; gap: 8px; flex-shrink: 0; }
         .sermon-actions button {
             background: #e5e7eb;
             color: #111;
@@ -87,9 +60,7 @@
             border: none;
             cursor: pointer;
         }
-        .sermon-actions button:hover {
-            background: #d1d5db;
-        }
+        .sermon-actions button:hover { background: #d1d5db; }
         .book-header {
             display: flex;
             justify-content: space-between;
@@ -101,10 +72,7 @@
             background: #fff;
             margin-bottom: 8px;
         }
-        .book-header h3 {
-            margin: 0;
-            font-size: 1rem;
-        }
+        .book-header h3 { margin: 0; font-size: 1rem; }
         .book-header button {
             background: transparent;
             color: #1d4ed8;
@@ -113,16 +81,8 @@
             cursor: pointer;
             padding: 0;
         }
-        .book-content {
-            margin-bottom: 18px;
-        }
-        .hidden {
-            display: none;
-        }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
+        .book-content { margin-bottom: 18px; }
+        .hidden { display: none; }
         button {
             display: inline-flex;
             align-items: center;
@@ -136,9 +96,7 @@
             cursor: pointer;
             transition: background 0.2s ease;
         }
-        button:hover {
-            background: #1e40af;
-        }
+        button:hover { background: #1e40af; }
         .status {
             margin-top: 18px;
             padding: 16px;
@@ -146,390 +104,359 @@
             font-weight: 600;
             display: none;
         }
-        .status.success {
-            background: #ecfdf5;
-            color: #166534;
-            border: 1px solid #a7f3d0;
+        .status.success { background: #ecfdf5; color: #166534; border: 1px solid #a7f3d0; }
+        .status.error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        #login-section  { max-width: 400px; margin: 80px auto; }
+        #app-section    { display: none; }
+        .sign-out-btn {
+            float: right;
+            background: #6b7280;
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
-        .status.error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
+        .sign-out-btn:hover { background: #4b5563; }
     </style>
 </head>
 <body>
-    <div class="page">
-        <h1>Sermon Admin</h1>
-        <p class="note">Use this page locally after running <code>npm run admin</code>. It updates <code>sermons-data.json</code> directly. After saving, click the build button below to regenerate pages, or use the new build-and-push button to build and push updates automatically.</p>
 
-        <div id="status" class="status"></div>
+<!-- ── Login ── -->
+<div class="page" id="login-section">
+    <h1>Sermon Admin</h1>
+    <p class="note">Sign in with your Supabase admin account to manage sermons.</p>
+    <div id="login-status" class="status"></div>
+    <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" required autocomplete="username">
+        <label for="password">Password</label>
+        <input id="password" type="password" required autocomplete="current-password">
+        <button type="submit">Sign in</button>
+    </form>
+</div>
 
-        <form id="admin-form">
-            <label for="book">Book slug</label>
-            <select id="book" name="book" required>
-                <option value="" disabled selected>Select a book</option>
-                <option value="__new__">Add a new book slug</option>
-            </select>
-            <input id="new-book" name="newBook" placeholder="New book slug (e.g. 1-corinthians)" style="display:none">
-            <input id="original-book" name="originalBook" type="hidden">
-            <input id="sermon-index" name="sermonIndex" type="hidden">
+<!-- ── App ── -->
+<div class="page" id="app-section">
+    <button class="sign-out-btn" id="sign-out-btn" type="button">Sign out</button>
+    <h1>Sermon Admin</h1>
+    <p class="note">Add, edit, or delete sermons. Changes are saved instantly to Supabase and reflected live on the public site.</p>
 
-            <label for="subtitle">Book subtitle (optional)</label>
-            <input id="subtitle" name="subtitle" placeholder="Optional subtitle for a new book">
+    <div id="status" class="status"></div>
 
-            <label for="title">Sermon title</label>
-            <input id="title" name="title" required>
+    <form id="admin-form">
+        <label for="book">Book slug</label>
+        <select id="book" name="book" required>
+            <option value="" disabled selected>Select a book</option>
+            <option value="__new__">Add a new book slug…</option>
+        </select>
+        <input id="new-book" name="newBook" placeholder="New book slug (e.g. galatians)" style="display:none">
+        <input id="sermon-id" name="sermonId" type="hidden">
 
-            <label for="passage">Passage</label>
-            <input id="passage" name="passage" placeholder="e.g. 1 Corinthians 2:1–5">
+        <label for="subtitle">Book subtitle (optional)</label>
+        <input id="subtitle" name="subtitle" placeholder="Optional series subtitle">
 
-            <label for="date">Date</label>
-            <input id="date" name="date" type="date" placeholder="YYYY-MM-DD">
+        <label for="title">Sermon title</label>
+        <input id="title" name="title" required>
 
-            <label for="url">Audio URL</label>
-            <input id="url" name="url" type="url" placeholder="https://..." required>
+        <label for="passage">Passage</label>
+        <input id="passage" name="passage" placeholder="e.g. 1 Corinthians 2:1–5">
 
-            <label for="commit-message">Commit message (Build & Push only)</label>
-            <input id="commit-message" name="commitMessage" placeholder="Default is current date">
+        <label for="date">Date</label>
+        <input id="date" name="date" type="date">
 
-            <button type="submit">Save sermon</button>
-            <button type="button" id="cancel-edit" style="margin-left: 12px; background:#6b7280; display:none;">Cancel edit</button>
-            <button type="button" id="build-button" style="margin-left: 12px; background:#047857;">Build now</button>
-            <button type="button" id="build-push-button" style="margin-left: 12px; background:#0f766e;">Build &amp; Push</button>
-        </form>
+        <label for="url">Audio / Video URL</label>
+        <input id="url" name="url" type="url" placeholder="https://…" required>
 
-        <section id="added-sermons-list" style="margin-top: 32px;">
-            <h2>Unpublished sermon changes</h2>
-            <div id="added-sermons-container">Loading...</div>
-        </section>
+        <button type="submit">Save sermon</button>
+        <button type="button" id="cancel-edit" style="margin-left:12px; background:#6b7280; display:none;">Cancel edit</button>
+    </form>
 
-        <section id="sermons-list" style="margin-top: 32px;">
-            <h2>Existing sermons</h2>
-            <div id="sermons-container">Loading sermons…</div>
-        </section>
-    </div>
+    <section id="sermons-list" style="margin-top:32px;">
+        <h2>Existing sermons</h2>
+        <div id="sermons-container">Loading sermons…</div>
+    </section>
+</div>
 
-    <script>
-        const form = document.getElementById('admin-form');
-        const statusEl = document.getElementById('status');
-        const bookSelect = document.getElementById('book');
-        const newBookInput = document.getElementById('new-book');
-        const originalBookInput = document.getElementById('original-book');
-        const sermonIndexInput = document.getElementById('sermon-index');
-        const cancelEditButton = document.getElementById('cancel-edit');
-        const commitMessageInput = document.getElementById('commit-message');
-        const buildButton = document.getElementById('build-button');
-        const buildPushButton = document.getElementById('build-push-button');
-        const sermonsContainer = document.getElementById('sermons-container');
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let sermonData = {};
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+    const loginSection    = document.getElementById('login-section');
+    const appSection      = document.getElementById('app-section');
+    const loginForm       = document.getElementById('login-form');
+    const loginStatus     = document.getElementById('login-status');
+    const signOutBtn      = document.getElementById('sign-out-btn');
+    const adminForm       = document.getElementById('admin-form');
+    const statusEl        = document.getElementById('status');
+    const bookSelect      = document.getElementById('book');
+    const newBookInput    = document.getElementById('new-book');
+    const sermonIdInput   = document.getElementById('sermon-id');
+    const cancelEditBtn   = document.getElementById('cancel-edit');
+    const sermonsContainer = document.getElementById('sermons-container');
 
-        function showStatus(message, type = 'success') {
-            statusEl.textContent = message;
-            statusEl.className = 'status ' + type;
-            statusEl.style.display = 'block';
-            statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function showStatus(msg, type = 'success') {
+        statusEl.textContent = msg;
+        statusEl.className   = 'status ' + type;
+        statusEl.style.display = 'block';
+        statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function hideStatus() { statusEl.style.display = 'none'; }
+
+    function showLoginStatus(msg, type = 'error') {
+        loginStatus.textContent = msg;
+        loginStatus.className   = 'status ' + type;
+        loginStatus.style.display = 'block';
+    }
+
+    function formatBookTitle(slug) {
+        return slug.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function parsePassageRef(passage) {
+        if (!passage) return { chapter: Infinity, verse: Infinity };
+        const m = passage.match(/(\d+)(?::(\d+))?/);
+        if (!m) return { chapter: Infinity, verse: Infinity };
+        return { chapter: Number(m[1]), verse: m[2] ? Number(m[2]) : 1 };
+    }
+
+    function sortSermons(sermons) {
+        return [...sermons].sort((a, b) => {
+            const ra = parsePassageRef(a.passage);
+            const rb = parsePassageRef(b.passage);
+            if (ra.chapter !== rb.chapter) return ra.chapter - rb.chapter;
+            return ra.verse - rb.verse;
+        });
+    }
+
+    function updateBookInputVisibility() {
+        const isNew = bookSelect.value === '__new__';
+        newBookInput.style.display = isNew ? 'block' : 'none';
+        if (!isNew) newBookInput.value = '';
+    }
+
+    function resetForm() {
+        adminForm.reset();
+        sermonIdInput.value = '';
+        cancelEditBtn.style.display = 'none';
+        updateBookInputVisibility();
+    }
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    async function checkSession() {
+        const { data: { session } } = await db.auth.getSession();
+        if (session) {
+            showApp();
+        }
+    }
+
+    function showApp() {
+        loginSection.style.display = 'none';
+        appSection.style.display   = 'block';
+        loadSermons();
+    }
+
+    function showLogin() {
+        appSection.style.display   = 'none';
+        loginSection.style.display = 'block';
+    }
+
+    loginForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        if (error) {
+            showLoginStatus(error.message);
+        } else {
+            loginStatus.style.display = 'none';
+            showApp();
+        }
+    });
+
+    signOutBtn.addEventListener('click', async () => {
+        await db.auth.signOut();
+        showLogin();
+    });
+
+    db.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') showLogin();
+    });
+
+    // ── Load sermons ──────────────────────────────────────────────────────────
+    async function loadSermons() {
+        const { data: rows, error } = await db
+            .from('sermons')
+            .select('id, book_slug, book_subtitle, passage, title, url, date')
+            .order('book_slug', { ascending: true })
+            .order('id',        { ascending: true });
+
+        if (error) {
+            showStatus('Failed to load sermons: ' + error.message, 'error');
+            return;
         }
 
-        function hideStatus() {
-            statusEl.style.display = 'none';
+        // Group by book_slug
+        const grouped = {};
+        for (const row of rows) {
+            if (!grouped[row.book_slug]) grouped[row.book_slug] = { subtitle: row.book_subtitle, sermons: [] };
+            grouped[row.book_slug].sermons.push(row);
         }
 
-        function updateBookInputVisibility() {
-            const isNew = bookSelect.value === '__new__';
-            newBookInput.style.display = isNew ? 'block' : 'none';
-            if (!isNew) {
-                newBookInput.value = '';
-            }
+        // Populate book dropdown
+        const slugs = Object.keys(grouped).sort();
+        bookSelect.innerHTML =
+            '<option value="" disabled selected>Select a book</option>' +
+            '<option value="__new__">Add a new book slug…</option>' +
+            slugs.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(formatBookTitle(s))}</option>`).join('');
+        updateBookInputVisibility();
+
+        // Render sermon list
+        if (!slugs.length) {
+            sermonsContainer.textContent = 'No sermons yet.';
+            return;
         }
 
-        function resetForm() {
-            form.reset();
-            originalBookInput.value = '';
-            sermonIndexInput.value = '';
-            cancelEditButton.style.display = 'none';
-            updateBookInputVisibility();
-            commitMessageInput.value = new Date().toISOString().slice(0, 10);
-        }
-
-        function formatBookTitle(book) {
-            return book.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-        }
-
-        function parsePassageReference(passage) {
-            if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
-            const firstMatch = passage.match(/(\d+)(?::(\d+))?/);
-            if (!firstMatch) return { chapter: Infinity, verse: Infinity };
-            const chapter = Number(firstMatch[1]);
-            const verse = firstMatch[2] ? Number(firstMatch[2]) : 1;
-            return { chapter, verse };
-        }
-
-        function sortSermonsByReference(sermons) {
-            return [...sermons].sort((a, b) => {
-                const refA = parsePassageReference(a.passage);
-                const refB = parsePassageReference(b.passage);
-                if (refA.chapter !== refB.chapter) return refA.chapter - refB.chapter;
-                return refA.verse - refB.verse;
-            });
-        }
-
-        function renderBookOptions(data) {
-            const slugs = Object.keys(data).sort();
-            bookSelect.innerHTML = '<option value="" disabled selected>Select a book</option>' +
-                '<option value="__new__">Add a new book slug</option>' +
-                slugs.map(slug => `<option value="${slug}">${formatBookTitle(slug)}</option>`).join('');
-            updateBookInputVisibility();
-        }
-
-        function renderSermonList(data) {
-            sermonData = data;
-            const books = Object.keys(data).sort();
-            if (!books.length) {
-                sermonsContainer.textContent = 'No sermons yet.';
-                return;
-            }
-
-            sermonsContainer.innerHTML = books.map(book => {
-                const bookData = data[book];
-                const bookTitle = formatBookTitle(book);
-                const subtitleHtml = bookData.subtitle ? `<div class="sermon-meta">${bookData.subtitle}</div>` : '';
-                const sermonsHtml = sortSermonsByReference(bookData.sermons).map((sermon, index) => {
-                    const meta = [sermon.date, sermon.passage].filter(Boolean).join(' • ');
-                    return `
-                        <div class="sermon-row">
-                            <div class="sermon-info">
-                                <div class="sermon-title">${sermon.title}</div>
-                                <div class="sermon-meta">${meta}</div>
-                            </div>
-                            <div class="sermon-actions">
-                                <button type="button" data-action="edit" data-book="${book}" data-index="${index}">Edit</button>
-                                <button type="button" data-action="delete" data-book="${book}" data-index="${index}">Delete</button>
-                            </div>
-                        </div>`;
-                }).join('');
-
+        sermonsContainer.innerHTML = slugs.map(book => {
+            const bookData = grouped[book];
+            const bookTitle = formatBookTitle(book);
+            const subtitleHtml = bookData.subtitle ? `<div class="sermon-meta">${escapeHtml(bookData.subtitle)}</div>` : '';
+            const sorted = sortSermons(bookData.sermons);
+            const sermonsHtml = sorted.map(sermon => {
+                const meta = [sermon.date, sermon.passage].filter(Boolean).join(' • ');
                 return `
-                    <div class="book-list">
-                        <div class="book-header" data-book="${book}">
-                            <h3>${bookTitle}</h3>
-                            <button type="button" aria-expanded="false">Expand</button>
+                    <div class="sermon-row">
+                        <div class="sermon-info">
+                            <div class="sermon-title">${escapeHtml(sermon.title)}</div>
+                            <div class="sermon-meta">${escapeHtml(meta)}</div>
                         </div>
-                        <div class="book-content hidden">
-                            ${subtitleHtml}
-                            ${sermonsHtml}
+                        <div class="sermon-actions">
+                            <button type="button" data-action="edit"   data-id="${sermon.id}">Edit</button>
+                            <button type="button" data-action="delete" data-id="${sermon.id}">Delete</button>
                         </div>
                     </div>`;
             }).join('');
-        }
 
-        async function loadData() {
-            try {
-                const response = await fetch('/data');
-                if (!response.ok) throw new Error('Unable to load sermon data');
-                const data = await response.json();
-                renderBookOptions(data);
-                renderSermonList(data);
-                loadAddedSermons();
-            } catch (error) {
-                showStatus(error.message, 'error');
-            }
-        }
-
-        function renderAddedSermons(items = { added: [], updated: [] }) {
-            const container = document.getElementById('added-sermons-container');
-            const added = Array.isArray(items.added) ? items.added : [];
-            const updated = Array.isArray(items.updated) ? items.updated : [];
-            if (!added.length && !updated.length) {
-                container.textContent = 'No unpublished sermon changes.';
-                return;
-            }
-
-            const addedHtml = items.added.map(item => `
-                <div class="sermon-row">
-                    <div class="sermon-info">
-                        <div class="sermon-title">${item.title}</div>
-                        <div class="sermon-meta">${formatBookTitle(item.book)} ${item.date ? `• ${item.date}` : ''}</div>
+            return `
+                <div class="book-list">
+                    <div class="book-header" data-book="${escapeHtml(book)}">
+                        <h3>${escapeHtml(bookTitle)}</h3>
+                        <button type="button" aria-expanded="false">Expand</button>
                     </div>
-                </div>`).join('');
-
-            const updatedHtml = items.updated.map(item => `
-                <div class="sermon-row">
-                    <div class="sermon-info">
-                        <div class="sermon-title">${item.title}</div>
-                        <div class="sermon-meta">Updated in ${formatBookTitle(item.book)}${item.date ? ` • ${item.date}` : ''}</div>
+                    <div class="book-content hidden">
+                        ${subtitleHtml}
+                        ${sermonsHtml}
                     </div>
-                </div>`).join('');
+                </div>`;
+        }).join('');
 
-            container.innerHTML = `
-                ${items.added.length ? `<div><strong>Added</strong>${addedHtml}</div>` : ''}
-                ${items.updated.length ? `<div style="margin-top:16px"><strong>Updated</strong>${updatedHtml}</div>` : ''}`;
-        }
+        // Cache rows for edit lookups
+        window._sermonRows = rows;
+    }
 
-        async function loadAddedSermons() {
-            try {
-                const response = await fetch('/added-sermons');
-                if (!response.ok) throw new Error('Unable to load unpublished sermon changes');
-                const result = await response.json();
-                renderAddedSermons(result);
-            } catch (error) {
-                const container = document.getElementById('added-sermons-container');
-                container.textContent = 'Unable to load unpublished sermon changes.';
-            }
-        }
+    // ── Edit ──────────────────────────────────────────────────────────────────
+    function startEdit(id) {
+        const rows = window._sermonRows || [];
+        const sermon = rows.find(r => String(r.id) === String(id));
+        if (!sermon) { showStatus('Sermon not found.', 'error'); return; }
 
-        function startEdit(book, index) {
-            const bookData = sermonData[book];
-            if (!bookData || !bookData.sermons[index]) {
-                showStatus('Unable to load sermon for editing.', 'error');
-                return;
-            }
+        bookSelect.value = sermon.book_slug;
+        updateBookInputVisibility();
+        document.getElementById('subtitle').value = sermon.book_subtitle || '';
+        document.getElementById('title').value    = sermon.title;
+        document.getElementById('passage').value  = sermon.passage || '';
+        document.getElementById('date').value     = sermon.date    || '';
+        document.getElementById('url').value      = sermon.url;
+        sermonIdInput.value = sermon.id;
+        cancelEditBtn.style.display = 'inline-flex';
+        showStatus(`Editing "${sermon.title}". Make changes and click Save sermon.`, 'success');
+        adminForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-            const sermon = bookData.sermons[index];
-            bookSelect.value = book;
-            updateBookInputVisibility();
-            document.getElementById('subtitle').value = bookData.subtitle || '';
-            document.getElementById('title').value = sermon.title;
-            document.getElementById('passage').value = sermon.passage || '';
-            document.getElementById('date').value = sermon.date || '';
-            document.getElementById('url').value = sermon.url;
-            originalBookInput.value = book;
-            sermonIndexInput.value = index;
-            cancelEditButton.style.display = 'inline-flex';
-            showStatus(`Editing sermon from ${book}. Save to apply changes.`, 'success');
-        }
-
-        async function deleteSermon(book, index) {
-            if (!confirm('Delete this sermon? This cannot be undone.')) return;
-            hideStatus();
-            try {
-                const response = await fetch('/delete-sermon', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ book, sermonIndex: index })
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Delete failed');
-                showStatus('Sermon deleted successfully.');
-                resetForm();
-                await loadData();
-                await loadAddedSermons();
-            } catch (error) {
-                showStatus(error.message, 'error');
-            }
-        }
-
-        async function submitSermon() {
-            const bookValue = bookSelect.value;
-            const book = bookValue === '__new__' ? newBookInput.value.trim() : bookValue;
-            const payload = {
-                book,
-                subtitle: document.getElementById('subtitle').value.trim(),
-                title: document.getElementById('title').value.trim(),
-                passage: document.getElementById('passage').value.trim(),
-                date: document.getElementById('date').value,
-                url: document.getElementById('url').value.trim(),
-                originalBook: originalBookInput.value || undefined,
-                sermonIndex: sermonIndexInput.value !== '' ? Number(sermonIndexInput.value) : undefined
-            };
-
-            if (!book || !payload.title || !payload.url) {
-                showStatus('Book slug, sermon title, and URL are required.', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/save-sermon', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Failed to save sermon');
-                showStatus('Sermon saved successfully. You can now build the site below.');
-                resetForm();
-                await loadData();
-                await loadAddedSermons();
-            } catch (error) {
-                showStatus(error.message, 'error');
-            }
-        }
-
-        async function runBuild() {
-            hideStatus();
-            showStatus('Running build... please wait.', 'success');
-            try {
-                const response = await fetch('/build', { method: 'POST' });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Build failed');
-                showStatus('Build completed successfully. Check your local files and then push the repo.');
-            } catch (error) {
-                showStatus(error.message, 'error');
-            }
-        }
-
-        async function runBuildAndPush() {
-            hideStatus();
-            showStatus('Running build and pushing changes... please wait.', 'success');
-            try {
-                const response = await fetch('/build-push', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ commitMessage: commitMessageInput.value.trim() })
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Build and push failed');
-                showStatus('Build, commit, and push completed successfully. Verification complete.', 'success');
-            } catch (error) {
-                showStatus(error.message, 'error');
-            }
-        }
-
-        form.addEventListener('submit', event => {
-            event.preventDefault();
-            hideStatus();
-            submitSermon();
-        });
-
-        cancelEditButton.addEventListener('click', event => {
-            event.preventDefault();
-            hideStatus();
-            resetForm();
-        });
-
-        bookSelect.addEventListener('change', updateBookInputVisibility);
-        buildButton.addEventListener('click', runBuild);
-        buildPushButton.addEventListener('click', runBuildAndPush);
-        sermonsContainer.addEventListener('click', event => {
-            const header = event.target.closest('.book-header');
-            if (header) {
-                const content = header.nextElementSibling;
-                if (!content) return;
-                const expanded = header.querySelector('button');
-                content.classList.toggle('hidden');
-                if (expanded) {
-                    const isHidden = content.classList.contains('hidden');
-                    expanded.textContent = isHidden ? 'Expand' : 'Collapse';
-                    expanded.setAttribute('aria-expanded', !isHidden);
-                }
-                return;
-            }
-
-            const button = event.target.closest('button[data-action]');
-            if (!button) return;
-            const action = button.dataset.action;
-            const book = button.dataset.book;
-            const index = Number(button.dataset.index);
-            if (action === 'edit') {
-                startEdit(book, index);
-            } else if (action === 'delete') {
-                deleteSermon(book, index);
-            }
-        });
-
+    // ── Delete ────────────────────────────────────────────────────────────────
+    async function deleteSermon(id) {
+        if (!confirm('Delete this sermon? This cannot be undone.')) return;
+        hideStatus();
+        const { error } = await db.from('sermons').delete().eq('id', id);
+        if (error) { showStatus('Delete failed: ' + error.message, 'error'); return; }
+        showStatus('Sermon deleted successfully.');
         resetForm();
-        loadData();
-    </script>
+        await loadSermons();
+    }
+
+    // ── Save (insert / update) ────────────────────────────────────────────────
+    adminForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        hideStatus();
+
+        const bookValue   = bookSelect.value;
+        const bookSlug    = bookValue === '__new__' ? newBookInput.value.trim() : bookValue;
+        const subtitle    = document.getElementById('subtitle').value.trim() || null;
+        const title       = document.getElementById('title').value.trim();
+        const passage     = document.getElementById('passage').value.trim() || '';
+        const date        = document.getElementById('date').value || null;
+        const url         = document.getElementById('url').value.trim();
+        const editId      = sermonIdInput.value;
+
+        if (!bookSlug || !title || !url) {
+            showStatus('Book slug, sermon title, and URL are required.', 'error');
+            return;
+        }
+
+        const payload = { book_slug: bookSlug, book_subtitle: subtitle, passage, title, url, date };
+
+        let error;
+        if (editId) {
+            ({ error } = await db.from('sermons').update(payload).eq('id', editId));
+        } else {
+            ({ error } = await db.from('sermons').insert(payload));
+        }
+
+        if (error) { showStatus('Save failed: ' + error.message, 'error'); return; }
+        showStatus(editId ? 'Sermon updated successfully.' : 'Sermon added successfully.');
+        resetForm();
+        await loadSermons();
+    });
+
+    cancelEditBtn.addEventListener('click', () => { hideStatus(); resetForm(); });
+    bookSelect.addEventListener('change', updateBookInputVisibility);
+
+    // ── Sermon list click delegation ──────────────────────────────────────────
+    sermonsContainer.addEventListener('click', e => {
+        // Toggle book expand/collapse
+        const header = e.target.closest('.book-header');
+        if (header) {
+            const content  = header.nextElementSibling;
+            const toggle   = header.querySelector('button');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (toggle) {
+                const hidden = content.classList.contains('hidden');
+                toggle.textContent = hidden ? 'Expand' : 'Collapse';
+                toggle.setAttribute('aria-expanded', String(!hidden));
+            }
+            return;
+        }
+
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id     = btn.dataset.id;
+        if (action === 'edit')   startEdit(id);
+        if (action === 'delete') deleteSermon(id);
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    checkSession();
+</script>
 </body>
 </html>
