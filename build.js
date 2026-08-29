@@ -185,10 +185,11 @@ function updateLibrary(latestSermon) {
   const libraryPath = 'library.html';
   let html = fs.readFileSync(libraryPath, 'utf8');
   const formattedDate = formatDate(latestSermon.date);
-  html = html.replace(/<a href="[^"]*">/, `<a href="${latestSermon.url}">`);
-  html = html.replace(/<div class="recent-title">\s*[^<]*\s*<\/div>/, `<div class="recent-title">\n                    ${latestSermon.title}\n                </div>`);
-  html = html.replace(/<div class="scripture">\s*[^<]*\s*<\/div>/, `<div class="scripture">\n                    ${latestSermon.passage}\n                </div>`);
-  html = html.replace(/<div class="recent-date">\s*[^<]*\s*<\/div>/, `<div class="recent-date">\n                    ${formattedDate}\n                </div>`);
+  // Target the specific recent-link anchor by id
+  html = html.replace(/<a id="recent-link" href="[^"]*">/, `<a id="recent-link" href="${latestSermon.url}">`);
+  html = html.replace(/<div class="recent-title"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-title" id="recent-title">\n                    ${latestSermon.title}\n                </div>`);
+  html = html.replace(/<div class="scripture"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="scripture" id="recent-passage">\n                    ${latestSermon.passage}\n                </div>`);
+  html = html.replace(/<div class="recent-date"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-date" id="recent-date">\n                    ${formattedDate}\n                </div>`);
   fs.writeFileSync(libraryPath, html);
 }
 

@@ -41,7 +41,7 @@
             <h2>Old Testament</h2>
             <hr>
             <div class="fl">
-                <div class="gr"><a href="https://youtu.be/xc4Hl-qT3jE?si=fKvORD3FyLzCHL93">Genesis</a></div>
+                <div class="gr"><a href="sermons/genesis.html">Genesis</a></div>
                 <div class="gr"><a href="sermons/exodus.html">Exodus</a></div>
                 <div class="gr"><a href="sermons/leviticus.html">Leviticus</a></div>
                 <div class="gr"><a href="sermons/numbers.html">Numbers</a></div>
@@ -129,40 +129,31 @@
         var url = config.url;
         var key = config.anonKey;
 
-        fetch(url + '/rest/v1/sermons?published=eq.true&date=not.is.null&order=date.desc&limit=1&select=title,passage,date', {
+        fetch(url + '/rest/v1/sermons?published=eq.true&date=not.is.null&order=date.desc&limit=1&select=id,title,passage,date', {
           headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
         })
         .then(function (r) { return r.json(); })
         .then(function (rows) {
           if (!rows || !rows[0]) return;
           var s = rows[0];
-          // Get media link for this sermon
-          fetch(url + '/rest/v1/sermons?published=eq.true&date=not.is.null&order=date.desc&limit=1&select=id', {
+          fetch(url + '/rest/v1/media_links?sermon_id=eq.' + s.id + '&order=sort_order.asc&limit=1&select=url', {
             headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
           })
           .then(function (r) { return r.json(); })
-          .then(function (ids) {
-            if (!ids || !ids[0]) return;
-            fetch(url + '/rest/v1/media_links?sermon_id=eq.' + ids[0].id + '&order=sort_order.asc&limit=1&select=url', {
-              headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (links) {
-              var mediaUrl = links && links[0] ? links[0].url : null;
-              // Update DOM
-              var titleEl   = document.getElementById('recent-title');
-              var passEl    = document.getElementById('recent-passage');
-              var dateEl    = document.getElementById('recent-date');
-              var linkEl    = document.getElementById('recent-link');
-              if (titleEl)  titleEl.textContent  = s.title;
-              if (passEl)   passEl.textContent   = s.passage || '';
-              if (dateEl && s.date) {
-                var d = new Date(s.date + 'T00:00:00Z');
-                var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-                dateEl.textContent = months[d.getUTCMonth()] + ' ' + d.getUTCDate();
-              }
-              if (linkEl && mediaUrl) linkEl.href = mediaUrl;
-            }).catch(function(){});
+          .then(function (links) {
+            var mediaUrl = links && links[0] ? links[0].url : null;
+            var titleEl  = document.getElementById('recent-title');
+            var passEl   = document.getElementById('recent-passage');
+            var dateEl   = document.getElementById('recent-date');
+            var linkEl   = document.getElementById('recent-link');
+            if (titleEl) titleEl.textContent = s.title;
+            if (passEl)  passEl.textContent  = s.passage || '';
+            if (dateEl && s.date) {
+              var d = new Date(s.date + 'T00:00:00Z');
+              var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+              dateEl.textContent = months[d.getUTCMonth()] + ' ' + d.getUTCDate();
+            }
+            if (linkEl && mediaUrl) linkEl.href = mediaUrl;
           }).catch(function(){});
         }).catch(function(){});
       })();
