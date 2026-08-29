@@ -10,5 +10,5 @@
  *
  * DO NOT use the service-role key here.
  */
-window.__ADMIN_SUPABASE_URL__      = 'YOUR_SUPABASE_URL';
-window.__ADMIN_SUPABASE_ANON_KEY__ = 'YOUR_SUPABASE_ANON_KEY';
+window.__ADMIN_SUPABASE_URL__      = 'https://bgwsxziccrjgfedcclqt.supabase.co';
+window.__ADMIN_SUPABASE_ANON_KEY__ = 'sb_publishable_7SqzBcy2URLq38Y5zjYOAA_KHZ_ClAS';
