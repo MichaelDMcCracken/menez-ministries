@@ -143,7 +143,7 @@ function createServer() {
         const urlValue = normalizeString(body.url);
 
         if (!bookSlug || !title || !urlValue) {
-          sendJson(res, 400, { error: 'Book slug, sermon title, and URL are required.' });
+          sendJson(res, 400, { error: 'Book, sermon title, and URL are required.' });
           return;
         }
 
@@ -212,7 +212,7 @@ function createServer() {
         const sermonIndex = Number(body.sermonIndex);
 
         if (!bookSlug || Number.isNaN(sermonIndex) || sermonIndex < 0) {
-          sendJson(res, 400, { error: 'Book slug and sermon index are required.' });
+          sendJson(res, 400, { error: 'Book and sermon index are required.' });
           return;
         }
 

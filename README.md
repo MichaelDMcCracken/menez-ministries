@@ -141,8 +141,8 @@ Then open `admin.html` in your browser using the local server URL shown in the t
 
 ## Using the Admin UI
 
-1. In the admin page, choose an existing book slug or add a new one.
-2. Enter sermon details: title, passage, date, and audio URL.
+1. In the admin page, choose an existing book or add a new book slug.
+2. Enter sermon details: title, passage start/end references, date, and audio URL.
 3. Click **Save sermon**.
 4. After saving, use either:
    - **Build now** to regenerate the site files locally, or

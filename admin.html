@@ -119,6 +119,37 @@
         .hidden {
             display: none;
         }
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+        .reference-group {
+            border: 1px solid #e1e4ea;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+        .reference-heading {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .reference-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .reference-row select {
+            margin-bottom: 0;
+        }
+        .field-note {
+            margin: 0 0 18px;
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
         textarea {
             min-height: 100px;
             resize: vertical;
@@ -156,6 +187,12 @@
             color: #991b1b;
             border: 1px solid #fecaca;
         }
+        @media (max-width: 640px) {
+            .reference-grid,
+            .reference-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -166,7 +203,7 @@
         <div id="status" class="status"></div>
 
         <form id="admin-form">
-            <label for="book">Book slug</label>
+            <label for="book">Book</label>
             <select id="book" name="book" required>
                 <option value="" disabled selected>Select a book</option>
                 <option value="__new__">Add a new book slug</option>
@@ -181,8 +218,24 @@
             <label for="title">Sermon title</label>
             <input id="title" name="title" required>
 
-            <label for="passage">Passage</label>
-            <input id="passage" name="passage" placeholder="e.g. 1 Corinthians 2:1–5">
+            <label>Passage</label>
+            <div class="reference-grid">
+                <div class="reference-group">
+                    <div class="reference-heading">Start reference</div>
+                    <div class="reference-row">
+                        <select id="start-chapter" name="startChapter"></select>
+                        <select id="start-verse" name="startVerse"></select>
+                    </div>
+                </div>
+                <div class="reference-group">
+                    <div class="reference-heading">End reference (optional)</div>
+                    <div class="reference-row">
+                        <select id="end-chapter" name="endChapter"></select>
+                        <select id="end-verse" name="endVerse"></select>
+                    </div>
+                </div>
+            </div>
+            <p class="field-note">Choose a start reference and, for ranges, an optional end reference. Leave the end blank for a single verse, or leave verses blank for chapter-wide passages.</p>
 
             <label for="date">Date</label>
             <input id="date" name="date" type="date" placeholder="YYYY-MM-DD">
@@ -222,8 +275,14 @@
         const buildButton = document.getElementById('build-button');
         const buildPushButton = document.getElementById('build-push-button');
         const sermonsContainer = document.getElementById('sermons-container');
+        const startChapterSelect = document.getElementById('start-chapter');
+        const startVerseSelect = document.getElementById('start-verse');
+        const endChapterSelect = document.getElementById('end-chapter');
+        const endVerseSelect = document.getElementById('end-verse');
 
         let sermonData = {};
+        const CHAPTER_OPTION_MAX = 150;
+        const VERSE_OPTION_MAX = 176;
 
         function showStatus(message, type = 'success') {
             statusEl.textContent = message;
@@ -250,6 +309,7 @@
             sermonIndexInput.value = '';
             cancelEditButton.style.display = 'none';
             updateBookInputVisibility();
+            clearReferenceInputs();
             commitMessageInput.value = new Date().toISOString().slice(0, 10);
         }
 
@@ -264,6 +324,121 @@
             const chapter = Number(firstMatch[1]);
             const verse = firstMatch[2] ? Number(firstMatch[2]) : 1;
             return { chapter, verse };
+        }
+
+        function setNumericOptions(select, placeholder, max, extraOptions = []) {
+            select.innerHTML = `<option value="">${placeholder}</option>` +
+                extraOptions.map(option => `<option value="${option.value}">${option.label}</option>`).join('') +
+                Array.from({ length: max }, (_, index) => {
+                    const value = String(index + 1);
+                    return `<option value="${value}">${value}</option>`;
+                }).join('');
+        }
+
+        function initializeReferenceInputs() {
+            setNumericOptions(startChapterSelect, 'Start chapter', CHAPTER_OPTION_MAX, [{ value: '__book__', label: 'Whole book' }]);
+            setNumericOptions(startVerseSelect, 'Start verse', VERSE_OPTION_MAX);
+            setNumericOptions(endChapterSelect, 'End chapter', CHAPTER_OPTION_MAX);
+            setNumericOptions(endVerseSelect, 'End verse', VERSE_OPTION_MAX);
+        }
+
+        function clearReferenceInputs() {
+            startChapterSelect.value = '';
+            startVerseSelect.value = '';
+            endChapterSelect.value = '';
+            endVerseSelect.value = '';
+        }
+
+        function parseReferencePart(part) {
+            const match = String(part || '').trim().match(/^(\d+)(?::(\d+))?$/);
+            if (!match) return null;
+            return { chapter: match[1], verse: match[2] || '' };
+        }
+
+        function setReferenceInputs(book, passage) {
+            clearReferenceInputs();
+            if (!book || !passage) return;
+
+            const bookTitle = formatBookTitle(book);
+            const prefix = `${bookTitle} `;
+            const normalizedPassage = passage.replace(/-/g, '–');
+
+            if (normalizedPassage === bookTitle) {
+                startChapterSelect.value = '__book__';
+                return;
+            }
+
+            if (!normalizedPassage.startsWith(prefix)) return;
+
+            const reference = normalizedPassage.slice(prefix.length);
+            if (!reference) return;
+
+            const parts = reference.split('–');
+            const start = parseReferencePart(parts[0]);
+            if (!start) return;
+
+            startChapterSelect.value = start.chapter;
+            startVerseSelect.value = start.verse;
+
+            if (parts.length < 2) return;
+
+            const endRaw = parts[1].trim();
+            if (!endRaw) return;
+
+            if (start.verse && /^\d+$/.test(endRaw)) {
+                endChapterSelect.value = start.chapter;
+                endVerseSelect.value = endRaw;
+                return;
+            }
+
+            const end = parseReferencePart(endRaw);
+            if (!end) return;
+            endChapterSelect.value = end.chapter;
+            endVerseSelect.value = end.verse;
+        }
+
+        function formatReferencePart(chapter, verse) {
+            if (!chapter) return '';
+            return verse ? `${chapter}:${verse}` : chapter;
+        }
+
+        function buildPassage(book) {
+            const startChapter = startChapterSelect.value;
+            const startVerse = startVerseSelect.value;
+            const endChapter = endChapterSelect.value;
+            const endVerse = endVerseSelect.value;
+            const hasEndReference = Boolean(endChapter || endVerse);
+            const hasAnyReference = Boolean(startChapter || startVerse || hasEndReference);
+
+            if (!book || !hasAnyReference) return '';
+            if (!startChapter) {
+                throw new Error('Start chapter is required when setting a passage.');
+            }
+            if (startChapter === '__book__') {
+                if (startVerse || endChapter || endVerse) {
+                    throw new Error('Whole-book passages cannot include chapter or verse ranges.');
+                }
+                return formatBookTitle(book);
+            }
+            if (startVerse && !startChapter) {
+                throw new Error('Start chapter is required before selecting a verse.');
+            }
+            if (endVerse && !endChapter) {
+                throw new Error('End chapter is required before selecting an end verse.');
+            }
+
+            const startRef = formatReferencePart(startChapter, startVerse);
+            const endRef = formatReferencePart(endChapter, endVerse);
+
+            if (!endRef) {
+                return `${formatBookTitle(book)} ${startRef}`;
+            }
+
+            if (startVerse && endChapter === startChapter && endVerse) {
+                return `${formatBookTitle(book)} ${startRef}–${endVerse}`;
+            }
+
+            return `${formatBookTitle(book)} ${startRef}–${endRef}`;
         }
 
         function sortSermonsByReference(sermons) {
@@ -391,7 +566,7 @@
             updateBookInputVisibility();
             document.getElementById('subtitle').value = bookData.subtitle || '';
             document.getElementById('title').value = sermon.title;
-            document.getElementById('passage').value = sermon.passage || '';
+            setReferenceInputs(book, sermon.passage || '');
             document.getElementById('date').value = sermon.date || '';
             document.getElementById('url').value = sermon.url;
             originalBookInput.value = book;
@@ -423,11 +598,18 @@
         async function submitSermon() {
             const bookValue = bookSelect.value;
             const book = bookValue === '__new__' ? newBookInput.value.trim() : bookValue;
+            let passage;
+            try {
+                passage = buildPassage(book);
+            } catch (error) {
+                showStatus(error.message, 'error');
+                return;
+            }
             const payload = {
                 book,
                 subtitle: document.getElementById('subtitle').value.trim(),
                 title: document.getElementById('title').value.trim(),
-                passage: document.getElementById('passage').value.trim(),
+                passage,
                 date: document.getElementById('date').value,
                 url: document.getElementById('url').value.trim(),
                 originalBook: originalBookInput.value || undefined,
@@ -435,7 +617,7 @@
             };
 
             if (!book || !payload.title || !payload.url) {
-                showStatus('Book slug, sermon title, and URL are required.', 'error');
+                showStatus('Book, sermon title, and URL are required.', 'error');
                 return;
             }
 
@@ -499,6 +681,18 @@
         });
 
         bookSelect.addEventListener('change', updateBookInputVisibility);
+        endVerseSelect.addEventListener('change', () => {
+            if (endVerseSelect.value && !endChapterSelect.value && startChapterSelect.value && startChapterSelect.value !== '__book__') {
+                endChapterSelect.value = startChapterSelect.value;
+            }
+        });
+        startChapterSelect.addEventListener('change', () => {
+            if (startChapterSelect.value === '__book__') {
+                startVerseSelect.value = '';
+                endChapterSelect.value = '';
+                endVerseSelect.value = '';
+            }
+        });
         buildButton.addEventListener('click', runBuild);
         buildPushButton.addEventListener('click', runBuildAndPush);
         sermonsContainer.addEventListener('click', event => {
@@ -528,6 +722,7 @@
             }
         });
 
+        initializeReferenceInputs();
         resetForm();
         loadData();
     </script>
