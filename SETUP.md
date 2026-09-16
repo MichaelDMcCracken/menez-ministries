@@ -10,7 +10,7 @@ source of truth instead of Supabase.
 | Component        | Location       | Purpose                                |
 |-----------------|----------------|----------------------------------------|
 | Public website  | GitHub Pages   | Sermon library visible to all          |
-| Admin dashboard | Local browser  | Add or edit sermon metadata            |
+| Admin dashboard | Browser + Node server | Add or edit sermon metadata      |
 | Data store      | `sermons-data.json` | Source of truth for generated pages |
 
 ---
@@ -25,9 +25,9 @@ npm install
 
 ---
 
-## Step 2 — Start the Local Admin Interface
+## Step 2 — Run the Admin Server
 
-Run:
+For local use, run:
 
 ```bash
 npm run admin
@@ -36,7 +36,15 @@ npm run admin
 Then open the local URL shown in the terminal, such as
 <http://localhost:3000/admin>.
 
-The admin page edits `sermons-data.json` directly.
+For hosted remote use, deploy the repository to a Node-capable server and run:
+
+```bash
+npm start
+```
+
+Then open that hosted server's `/admin` URL in your browser.
+
+The admin page edits `sermons-data.json` directly through the server.
 
 ---
 
@@ -73,12 +81,16 @@ git commit -m "Update sermons"
 git push
 ```
 
+If you are using the hosted admin server, the **Build & Push** button can do
+this for you as long as the server has a writable repository checkout and Git
+credentials configured for push access.
+
 ---
 
 ## How the System Works
 
 1. `sermons-data.json` stores sermon metadata.
-2. `admin-server.js` serves the local admin interface and writes updates to
+2. `admin-server.js` serves the admin interface and writes updates to
    `sermons-data.json`.
 3. `build.js` regenerates the public sermon pages from the JSON data.
 4. GitHub Pages serves the committed static files.
@@ -89,8 +101,8 @@ git push
 
 | File | Description |
 |------|-------------|
-| `admin.html` | Local admin interface |
-| `admin-server.js` | Local admin server |
+| `admin.html` | Browser-based admin interface |
+| `admin-server.js` | Admin server for local or hosted use |
 | `build.js` | Static site generator |
 | `sermons-data.json` | Sermon metadata |
 | `library.html` | Public landing page |
@@ -100,6 +112,6 @@ git push
 
 ## Troubleshooting
 
-- If the admin page does not load, confirm `npm run admin` is still running.
+- If the admin page does not load, confirm the admin server is still running.
 - If generated pages look outdated, run `npm run build` again.
 - If `git push` fails, verify your Git credentials and remote configuration.

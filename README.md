@@ -1,11 +1,11 @@
 # Menez Ministries Sermon Site
 
-This repository contains a static sermon website plus a local admin UI for adding and editing sermons, building the generated pages, and pushing updates to a GitHub repository.
+This repository contains a static sermon website plus a JSON-backed admin UI for adding and editing sermons in a browser, building the generated pages, and pushing updates to a GitHub repository.
 
 ## Overview
 
-- `admin.html` is the local admin interface for adding or updating sermon entries.
-- `admin-server.js` runs a local server to support the admin page and perform build/push actions.
+- `admin.html` is the browser-based admin interface for adding or updating sermon entries.
+- `admin-server.js` runs the admin server locally or on a hosted Node deployment and performs build/push actions.
 - `build.js` generates the static site files.
 - `sermons-data.json` stores the sermon metadata.
 - `package.json` defines the Node scripts and dependencies.
@@ -126,18 +126,35 @@ This installs the dependencies declared in `package.json`.
 
 ## Run the Admin Interface
 
-Start the admin server:
+Start the admin server locally:
 
 ```bash
 npm run admin
 ```
 
-Then open `admin.html` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
+Then open `/admin` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
 
 - Add or edit sermon entries
 - Save changes to `sermons-data.json`
 - Build generated pages
 - Build and push updates automatically
+
+## Host the Admin Interface Remotely
+
+If you want to add or edit sermons from a browser without running the server on
+your own machine, deploy the repository to any Node host and run:
+
+```bash
+npm start
+```
+
+Then open the hosted server's `/admin` URL in your browser.
+
+For the **Build & Push** button to work on that hosted server, the deployment
+must have:
+
+- a writable checkout of this repository
+- Git credentials that can push back to the repository remote
 
 ## Using the Admin UI
 
@@ -179,7 +196,7 @@ git push
 
 - The repo includes a `CNAME` file and generated `sermons/` pages.
 - If you are installing on a new machine, make sure your GitHub credentials are configured so `git push` succeeds.
-- If the admin page does not show the success message immediately, refresh the page and verify the local server is running.
+- If the admin page does not show the success message immediately, refresh the page and verify the admin server is running.
 
 ## Troubleshooting
 

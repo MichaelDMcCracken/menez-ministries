@@ -295,5 +295,5 @@ server.on('error', err => {
 });
 server.listen(PORT, () => {
   console.log(`Admin server is running at http://localhost:${PORT}`);
-  console.log('Open that address in your browser and add sermons locally.');
+  console.log('Open /admin in a browser on this server to manage sermons.');
 });

@@ -4,6 +4,7 @@
   "description": "Sermon library website",
   "main": "build.js",
   "scripts": {
+    "start": "node admin-server.js",
     "build": "node build.js",
     "admin": "node admin-server.js",
     "extract": "node extract-sermons.js"
