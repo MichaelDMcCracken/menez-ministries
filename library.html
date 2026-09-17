@@ -9,7 +9,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
-        <script src="js/supabase-config.js"></script>
     </head>
     <body>
         <div class="banner">
@@ -119,60 +118,4 @@
     <footer>
         © 2025 Menez Ministries
     </footer>
-    <script>
-      // Dynamically update the most recent sermon from Supabase when configured
-      (function () {
-        var linkEl   = document.getElementById('recent-link');
-        var titleEl  = document.getElementById('recent-title');
-        var passEl   = document.getElementById('recent-passage');
-        var dateEl   = document.getElementById('recent-date');
-        var didShow  = false;
-        if (linkEl) linkEl.style.visibility = 'hidden';
-
-        function showRecent() {
-          if (didShow || !linkEl) return;
-          didShow = true;
-          linkEl.style.visibility = '';
-          linkEl.removeAttribute('data-loading');
-        }
-
-        var config = window.__SUPABASE_CONFIG__;
-        if (!config || !config.url || !config.anonKey ||
-            config.url === 'YOUR_SUPABASE_URL') {
-          showRecent();
-          return;
-        }
-
-        var url = config.url;
-        var key = config.anonKey;
-
-        fetch(url + '/rest/v1/sermons?published=eq.true&date=not.is.null&order=date.desc&limit=1&select=id,title,passage,date', {
-          headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (rows) {
-          if (!rows || !rows[0]) {
-            showRecent();
-            return;
-          }
-          var s = rows[0];
-          fetch(url + '/rest/v1/media_links?sermon_id=eq.' + s.id + '&order=sort_order.asc&limit=1&select=url', {
-            headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
-          })
-          .then(function (r) { return r.json(); })
-          .then(function (links) {
-            var mediaUrl = links && links[0] ? links[0].url : null;
-            if (titleEl) titleEl.textContent = s.title;
-            if (passEl)  passEl.textContent  = s.passage || '';
-            if (dateEl && s.date) {
-              var d = new Date(s.date + 'T00:00:00Z');
-              var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-              dateEl.textContent = months[d.getUTCMonth()] + ' ' + d.getUTCDate();
-            }
-            if (linkEl && mediaUrl) linkEl.href = mediaUrl;
-            showRecent();
-          }).catch(function(){ showRecent(); });
-        }).catch(function(){ showRecent(); });
-      })();
-    </script>
 </html>

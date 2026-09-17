@@ -1,11 +1,13 @@
 # Menez Ministries Sermon Site
 
-This repository contains a static sermon website plus a local admin UI for adding and editing sermons, building the generated pages, and pushing updates to a GitHub repository.
+This repository contains a static sermon website plus a JSON-backed admin UI for adding and editing sermons in a browser, building the generated pages, and publishing updates to GitHub.
 
 ## Overview
 
-- `admin.html` is the local admin interface for adding or updating sermon entries.
-- `admin-server.js` runs a local server to support the admin page and perform build/push actions.
+- `admin.html` is the browser-based admin interface used by the local server.
+- `admin/index.html` is the hosted admin entrypoint for Vercel-style deployments.
+- `admin-server.js` runs the local admin server and performs build/push actions.
+- `api/` and `admin/api/` provide hosted GitHub-backed API endpoints for remote browser editing.
 - `build.js` generates the static site files.
 - `sermons-data.json` stores the sermon metadata.
 - `package.json` defines the Node scripts and dependencies.
@@ -126,27 +128,57 @@ This installs the dependencies declared in `package.json`.
 
 ## Run the Admin Interface
 
-Start the admin server:
+Start the admin server locally:
 
 ```bash
 npm run admin
 ```
 
-Then open `admin.html` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
+Then open `/admin` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
 
 - Add or edit sermon entries
 - Save changes to `sermons-data.json`
 - Build generated pages
 - Build and push updates automatically
 
+## Host the Admin Interface Remotely
+
+If you want the pastor to add or edit sermons from a browser without local repo
+access, deploy the hosted admin to Vercel.
+
+The hosted dashboard calls server-side API routes that:
+
+- read `sermons-data.json` from GitHub
+- regenerate `library.html` and `sermons/*.html`
+- commit the updated files back to the repository with a server-side credential
+
+### Required environment variables
+
+- `GITHUB_TOKEN` — a GitHub App installation token or fine-grained token with
+  contents write access to this repository
+- `GITHUB_OWNER` — defaults to `MichaelDMcCracken`
+- `GITHUB_REPO` — defaults to `menez-ministries`
+- `GITHUB_BRANCH` — optional; defaults to the repository's default branch
+
+### Deployment notes
+
+- The existing Vercel project can keep using `admin/` as its root directory.
+- If you deploy the whole repository on Vercel instead, the hosted dashboard is
+  available at `/admin/`.
+- The pastor only needs the deployed admin URL in a browser; no GitHub account,
+  Git, Node, or CLI access is required.
+
 ## Using the Admin UI
 
 1. In the admin page, choose an existing book slug or add a new one.
 2. Enter sermon details: title, passage, date, and audio URL.
 3. Click **Save sermon**.
-4. After saving, use either:
+4. If you are using the local admin server, use either:
    - **Build now** to regenerate the site files locally, or
    - **Build & Push** to build, commit, and push the changes to the repository.
+5. If you are using the hosted admin deployment, **Save sermon** immediately
+   writes the updated JSON and regenerated pages back to GitHub through the
+   server-side API.
 
 ## Manual Build Commands
 
@@ -162,10 +194,11 @@ This regenerates the site files from the current `sermons-data.json`.
 
 The admin UI includes a **Build & Push** button that will:
 
-1. Run `npm run build`
-2. Stage the generated site files and `sermons-data.json`
-3. Commit the changes with the provided commit message
-4. Push the commit to the repository remote
+1. On the local admin server: run `npm run build`, stage the generated site
+   files and `sermons-data.json`, commit them, and push to the repository
+   remote
+2. On the hosted admin deployment: rebuild the generated pages from the current
+   `sermons-data.json` and commit any resulting changes through the GitHub API
 
 If you prefer to do this manually in the terminal, use Git commands after building:
 
@@ -179,7 +212,7 @@ git push
 
 - The repo includes a `CNAME` file and generated `sermons/` pages.
 - If you are installing on a new machine, make sure your GitHub credentials are configured so `git push` succeeds.
-- If the admin page does not show the success message immediately, refresh the page and verify the local server is running.
+- If the local admin page does not show the success message immediately, refresh the page and verify the admin server is running.
 
 ## Troubleshooting
 

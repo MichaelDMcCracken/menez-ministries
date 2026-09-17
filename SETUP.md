@@ -1,204 +1,131 @@
-# Supabase CMS — Setup Guide
+# Sermon Site Setup Guide
 
-This document describes every manual step needed to finish deploying the
-Supabase-backed sermon management system.
+This project now uses the repository's checked-in JSON data file as the source
+of truth instead of Supabase.
 
 ---
 
 ## Overview
 
-| Component        | Hosting        | Purpose                         |
-|-----------------|----------------|---------------------------------|
-| Public website  | GitHub Pages   | Sermon library visible to all   |
-| Admin dashboard | Vercel         | Pastor adds/edits sermons       |
-| Database        | Supabase       | Source of truth for sermon data |
+| Component        | Location       | Purpose                                |
+|-----------------|----------------|----------------------------------------|
+| Public website  | GitHub Pages   | Sermon library visible to all          |
+| Admin dashboard | Browser + API backend | Add or edit sermon metadata      |
+| Data store      | `sermons-data.json` | Source of truth for generated pages |
 
 ---
 
-## Step 1 — Create a Supabase Project
+## Step 1 — Install Dependencies
 
-1. Go to <https://supabase.com> and create a free account.
-2. Create a new project (choose a region close to your users).
-3. Note down:
-   - **Project URL** — looks like `https://abcdefgh.supabase.co`
-   - **Anon (public) key** — starts with `eyJ…` (safe to expose in browser)
-   - **Service-role key** — starts with `eyJ…` (**keep this secret**)
-
----
-
-## Step 2 — Run the Database Migration
-
-In the Supabase dashboard, go to **SQL Editor** and paste the contents of:
-
-```
-supabase/migrations/001_initial_schema.sql
-```
-
-Click **Run**. This creates the `sermons`, `media_links`, `series`, and
-`speakers` tables along with RLS policies.
-
----
-
-## Step 3 — Create an Admin User
-
-In the Supabase dashboard:
-
-1. Go to **Authentication → Users**.
-2. Click **Invite user** (or **Add user**).
-3. Enter the pastor's email and a strong password.
-
-> Only authenticated users can write data. Public visitors can only read
-> published sermons (enforced by Row Level Security).
-
----
-
-## Step 4 — Migrate Existing Sermon Data
-
-Run the migration script once to import all 577 sermons from
-`sermons-data.json` into Supabase:
+From the repository root:
 
 ```bash
-SUPABASE_URL=https://your-project.supabase.co \
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
-node scripts/migrate-to-supabase.js
+npm install
 ```
-
-The script is idempotent — safe to re-run; it skips sermons that already exist.
 
 ---
 
-## Step 5 — Configure the Public Website
+## Step 2 — Choose an Admin Workflow
 
-Edit `js/supabase-config.js` and replace the placeholder values:
-
-```js
-window.__SUPABASE_CONFIG__ = {
-  url:     'https://your-project.supabase.co',
-  anonKey: 'your-anon-key-here',
-};
-```
-
-Then regenerate the static sermon pages:
+For local use, run:
 
 ```bash
-node build.js
+npm run admin
 ```
 
-Commit and push — GitHub Pages will serve the updated pages automatically.
+Then open the local URL shown in the terminal, such as
+<http://localhost:3000/admin>.
 
-> The anon key is safe to commit. It can only read **published** sermons
-> because of the Row Level Security policies in the database.
+For hosted remote use, deploy the admin dashboard to Vercel. The simplest
+option is to keep `admin/` as the Vercel project root so `admin/index.html` and
+`admin/api/*` are deployed together.
+
+Set these server-side environment variables in Vercel:
+
+- `GITHUB_TOKEN` — GitHub App installation token or fine-grained token with
+  repository contents write access
+- `GITHUB_OWNER` — optional; defaults to `MichaelDMcCracken`
+- `GITHUB_REPO` — optional; defaults to `menez-ministries`
+- `GITHUB_BRANCH` — optional; defaults to the repo default branch
+
+The hosted admin page reads and writes `sermons-data.json` through the GitHub
+API, regenerates the static pages server-side, and commits the results back to
+the repository. The pastor only needs the deployed dashboard URL in a browser,
+not a GitHub account, Git, Node, or CLI tools.
 
 ---
 
-## Step 6 — Deploy the Admin Dashboard to Vercel
+## Step 3 — Save Sermon Changes
 
-### Option A — Vercel via GitHub (recommended)
+In the admin UI:
 
-1. Go to <https://vercel.com> and import the `menez-ministries` repository.
-2. Set the **Root Directory** to `admin`.
-3. No build step is required (static HTML/JS).
-4. Vercel will deploy on every push.
+1. Choose an existing book slug or add a new one.
+2. Enter the sermon title, passage, date, and audio URL.
+3. Click **Save sermon**.
 
-### Option B — Vercel CLI
+On the hosted admin deployment, saving also regenerates the static pages and
+commits the updated files back to GitHub through the server-side API.
+
+---
+
+## Step 4 — Regenerate the Static Site
+
+After editing the data locally, rebuild the generated pages:
 
 ```bash
-npm i -g vercel
-cd admin
-vercel --prod
+npm run build
 ```
 
-### Set the custom domain
-
-In the Vercel dashboard:
-1. Go to **Project Settings → Domains**.
-2. Add `admin.flatrabbitministries.com`.
-3. Follow the DNS instructions to point the subdomain to Vercel.
+This updates `library.html` and the generated `sermons/*.html` pages from the
+current `sermons-data.json`.
 
 ---
 
-## Step 7 — Configure the Admin Dashboard
+## Step 5 — Commit and Push
 
-Edit `admin/config.js` and replace the placeholder values:
+After reviewing the generated changes:
 
-```js
-window.__ADMIN_SUPABASE_URL__      = 'https://your-project.supabase.co';
-window.__ADMIN_SUPABASE_ANON_KEY__ = 'your-anon-key-here';
+```bash
+git add sermons-data.json library.html sermons
+git commit -m "Update sermons"
+git push
 ```
 
-Commit and push (or deploy via Vercel CLI).
+If you are using the hosted admin deployment, the **Build & Push** button uses
+the GitHub API and server-side credentials instead of a writable checkout, and
+plain **Save sermon** already publishes the updated JSON plus regenerated pages.
 
 ---
 
-## Environment Variables Summary
+## How the System Works
 
-| Variable                    | Where used                          | Notes                        |
-|-----------------------------|-------------------------------------|------------------------------|
-| `SUPABASE_URL`              | Migration script (server-side only) | Never expose in browser      |
-| `SUPABASE_SERVICE_ROLE_KEY` | Migration script (server-side only) | **Never commit or expose**   |
-| `js/supabase-config.js`     | Public website (client-side)        | Anon key — safe to expose    |
-| `admin/config.js`           | Admin dashboard (client-side)       | Anon key — safe to expose    |
-
----
-
-## How the System Works After Setup
-
-### Adding a new sermon (pastor's workflow)
-
-1. Visit `admin.flatrabbitministries.com` and sign in.
-2. Click **+ Add Sermon**.
-3. Fill in title, book, passage, date, media URL.
-4. Check **Published**.
-5. Click **Add**.
-
-The sermon appears immediately on the public website — no Git, no builds,
-no deployments needed.
-
-### How the public website stays current
-
-Each sermon book page (e.g. `sermons/1-corinthians.html`) contains a
-JavaScript snippet that fetches live data from Supabase on page load.
-If Supabase is unreachable, the statically-generated fallback content is
-shown instead.
-
-`library.html` also dynamically loads and displays the most recent
-published sermon with a date.
+1. `sermons-data.json` stores sermon metadata.
+2. The local admin server writes updates directly to local files.
+3. The hosted admin API reads and writes the same JSON file through GitHub.
+4. `build.js` regenerates the public sermon pages from the JSON data.
+5. GitHub Pages serves the committed static files.
 
 ---
 
-## Files Changed
+## Files Involved
 
 | File | Description |
 |------|-------------|
-| `supabase/migrations/001_initial_schema.sql` | Database schema + RLS |
-| `scripts/migrate-to-supabase.js` | One-time data migration |
-| `js/supabase-config.js` | Public site Supabase config (fill in values) |
-| `admin/index.html` | Admin dashboard (single-page app) |
-| `admin/config.js` | Admin Supabase config (fill in values) |
-| `admin/vercel.json` | Vercel routing config |
-| `build.js` | Updated to generate Supabase-aware sermon pages |
-| `library.html` | Updated to dynamically load most-recent sermon |
-| `sermons/*.html` | Regenerated with Supabase dynamic loader |
-| `.env.example` | Environment variable reference |
-| `.gitignore` | Excludes `.env` and `node_modules` |
+| `admin.html` | Browser-based admin interface for local use |
+| `admin/index.html` | Hosted admin dashboard entrypoint |
+| `admin/api/*` | Hosted admin serverless API routes |
+| `api/*` | Hosted API routes when deploying the repo root |
+| `admin-server.js` | Local admin server |
+| `build.js` | Static site generator |
+| `lib/github-publisher.js` | Commits updates to GitHub through the API |
+| `sermons-data.json` | Sermon metadata |
+| `library.html` | Public landing page |
+| `sermons/*.html` | Generated sermon pages |
 
 ---
 
-## Remaining Decisions for Your Input
+## Troubleshooting
 
-1. **GitHub Actions for public-site config** — if you don't want to commit
-   the anon key directly in `js/supabase-config.js`, a GitHub Actions
-   workflow can inject it as a secret during deployment. Let me know if you
-   want this set up.
-
-2. **Email confirmation for new admin users** — by default Supabase sends a
-   confirmation email. You can disable this in
-   **Authentication → Settings → Email Auth**.
-
-3. **Password reset** — the admin dashboard does not currently include a
-   "Forgot password" flow. Supabase's dashboard can be used to reset
-   passwords manually for now.
-
-4. **Series management** — the migration script creates one series record
-   per book that has a subtitle. You can rename or reorganize these in the
-   admin under the **Series** tab.
+- If the admin page does not load, confirm the admin server is still running.
+- If generated pages look outdated, run `npm run build` again.
+- If `git push` fails, verify your Git credentials and remote configuration.

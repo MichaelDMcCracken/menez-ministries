@@ -161,7 +161,7 @@
 <body>
     <div class="page">
         <h1>Sermon Admin</h1>
-        <p class="note">Use this page locally after running <code>npm run admin</code>. It updates <code>sermons-data.json</code> directly. After saving, click the build button below to regenerate pages, or use the new build-and-push button to build and push updates automatically.</p>
+        <p class="note">Use this page in any browser. With the local admin server, it updates local files directly. With the hosted admin deployment, the backend commits <code>sermons-data.json</code> and regenerated pages to GitHub through a server-side credential, so the pastor never needs a GitHub account, Git, Node, or direct repository access.</p>
 
         <div id="status" class="status"></div>
 
@@ -326,7 +326,7 @@
 
         async function loadData() {
             try {
-                const response = await fetch('/data');
+                const response = await fetch('/api/data');
                 if (!response.ok) throw new Error('Unable to load sermon data');
                 const data = await response.json();
                 renderBookOptions(data);
@@ -369,7 +369,7 @@
 
         async function loadAddedSermons() {
             try {
-                const response = await fetch('/added-sermons');
+                const response = await fetch('/api/added-sermons');
                 if (!response.ok) throw new Error('Unable to load unpublished sermon changes');
                 const result = await response.json();
                 renderAddedSermons(result);
@@ -404,14 +404,14 @@
             if (!confirm('Delete this sermon? This cannot be undone.')) return;
             hideStatus();
             try {
-                const response = await fetch('/delete-sermon', {
+                const response = await fetch('/api/delete-sermon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ book, sermonIndex: index })
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Delete failed');
-                showStatus('Sermon deleted successfully.');
+                showStatus(result.message || 'Sermon deleted successfully.');
                 resetForm();
                 await loadData();
                 await loadAddedSermons();
@@ -440,14 +440,14 @@
             }
 
             try {
-                const response = await fetch('/save-sermon', {
+                const response = await fetch('/api/save-sermon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Failed to save sermon');
-                showStatus('Sermon saved successfully. You can now build the site below.');
+                showStatus(result.message || 'Sermon saved successfully.');
                 resetForm();
                 await loadData();
                 await loadAddedSermons();
@@ -460,10 +460,10 @@
             hideStatus();
             showStatus('Running build... please wait.', 'success');
             try {
-                const response = await fetch('/build', { method: 'POST' });
+                const response = await fetch('/api/build', { method: 'POST' });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Build failed');
-                showStatus('Build completed successfully. Check your local files and then push the repo.');
+                showStatus(result.message || 'Build completed successfully.');
             } catch (error) {
                 showStatus(error.message, 'error');
             }
@@ -473,14 +473,14 @@
             hideStatus();
             showStatus('Running build and pushing changes... please wait.', 'success');
             try {
-                const response = await fetch('/build-push', {
+                const response = await fetch('/api/build-push', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ commitMessage: commitMessageInput.value.trim() })
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Build and push failed');
-                showStatus('Build, commit, and push completed successfully. Verification complete.', 'success');
+                showStatus(result.message || 'Build, commit, and push completed successfully.', 'success');
             } catch (error) {
                 showStatus(error.message, 'error');
             }

@@ -4,10 +4,10 @@
   "description": "Sermon library website",
   "main": "build.js",
   "scripts": {
+    "start": "node admin-server.js",
     "build": "node build.js",
     "admin": "node admin-server.js",
-    "extract": "node extract-sermons.js",
-    "migrate": "node scripts/migrate-to-supabase.js"
+    "extract": "node extract-sermons.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0"
