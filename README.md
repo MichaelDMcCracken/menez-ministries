@@ -136,10 +136,9 @@ npm run admin
 
 Then open `/admin` in your browser using the local server URL shown in the terminal. The admin UI allows you to:
 
-- Add or edit sermon entries
-- Save changes to `sermons-data.json`
-- Build generated pages
-- Build and push updates automatically
+- Stage add/edit/delete sermon changes locally in the browser
+- Review pending unpublished changes
+- Publish all staged changes in one server-side build + GitHub commit
 
 ## Host the Admin Interface Remotely
 
@@ -189,15 +188,12 @@ numeric installation ID from the App installation URL.
 
 ## Using the Admin UI
 
-1. In the admin page, choose an existing book slug or add a new one.
-2. Enter sermon details: title, passage, date, and audio URL.
-3. Click **Save sermon**.
-4. If you are using the local admin server, use either:
-   - **Build now** to regenerate the site files locally, or
-   - **Build & Push** to build, commit, and push the changes to the repository.
-5. If you are using the hosted admin deployment, **Save sermon** immediately
-   writes the updated JSON and regenerated pages back to GitHub through the
-   server-side API.
+1. In the admin page, choose a Bible book and sermon details.
+2. Select chapter/verse passage values from dropdowns.
+3. Click **Stage Changes** to stage local unpublished updates.
+4. Review the **Pending Changes** section.
+5. Click **Publish Changes** to send the full staged dataset to the server,
+   regenerate site files, and create one GitHub commit.
 
 ## Manual Build Commands
 

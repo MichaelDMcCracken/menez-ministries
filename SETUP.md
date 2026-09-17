@@ -74,20 +74,24 @@ not a GitHub account, Git, Node, or CLI tools.
 
 ---
 
-## Step 3 — Save Sermon Changes
+## Step 3 — Stage Sermon Changes
 
 In the admin UI:
 
-1. Choose an existing book slug or add a new one.
-2. Enter the sermon title, passage, date, and audio URL.
-3. Click **Save sermon**.
+1. Choose a Bible book.
+2. Enter the sermon title, date, and audio URL.
+3. Select passage chapter/verse values from dropdowns.
+4. Click **Stage Changes**.
 
-On the hosted admin deployment, saving also regenerates the static pages and
-commits the updated files back to GitHub through the server-side API.
+Staged changes remain unpublished until you click **Publish Changes**.
+
+## Step 4 — Publish Staged Changes
+
+When you click **Publish Changes**, the admin API sends the complete staged
+dataset to the server, regenerates static files, and commits all staged updates
+to GitHub in a single commit.
 
 ---
-
-## Step 4 — Regenerate the Static Site
 
 After editing the data locally, rebuild the generated pages:
 

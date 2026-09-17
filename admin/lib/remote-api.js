@@ -2,6 +2,7 @@ const { createGitHubPublisher } = require('./github-publisher');
 const {
   deleteSermonRemotely,
   loadRemoteRepositoryState,
+  publishChangesRemotely,
   rebuildSiteRemotely,
   saveSermonRemotely,
 } = require('./remote-admin');
@@ -130,10 +131,32 @@ function buildHandler() {
   });
 }
 
+function publishChangesHandler() {
+  return withPublisher(async (req, res, publisher) => {
+    if (req.method !== 'POST') {
+      return methodNotAllowed(res, ['POST']);
+    }
+
+    try {
+      const result = await publishChangesRemotely(publisher, await readJsonBody(req));
+      sendJson(res, 200, {
+        message: result.changed
+          ? 'Staged sermon changes published, rebuilt, and committed to GitHub.'
+          : 'No changes were needed.',
+        commitSha: result.commitSha,
+        branch: result.branch,
+      });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message || 'Unable to publish staged changes.' });
+    }
+  });
+}
+
 module.exports = {
   addedSermonsHandler,
   buildHandler,
   dataHandler,
   deleteSermonHandler,
+  publishChangesHandler,
   saveSermonHandler,
 };
