@@ -1,94 +1,177 @@
+:root {
+    --ink: #f8f5ef;
+    --muted: rgba(248, 245, 239, 0.72);
+    --accent: #e8b98f;
+    --line: rgba(255, 255, 255, 0.22);
+    --panel: rgba(27, 24, 23, 0.58);
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Lexend';
+    font-family: 'Lexend', sans-serif;
     background-image: url("../img/frm-cover.jpg");
-    width: 100%;
     min-height: 100vh;
-    background-repeat: no-repeat;
+    background-position: center;
     background-size: cover;
-    text-align: center;
-    overflow-y: hidden;
-    overflow-x: hidden;
+    background-attachment: fixed;
+    color: var(--ink);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(25, 20, 18, 0.88), rgba(25, 20, 18, 0.42) 60%, rgba(25, 20, 18, 0.7));
+    z-index: -1;
+}
+
+.page-shell {
+    width: min(1120px, calc(100% - 3rem));
+    margin: auto;
+    padding: 4rem 0 3rem;
+}
+
+.header {
+    max-width: 760px;
+    margin-bottom: 3.5rem;
+}
+
+.eyebrow,
+.card-label {
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    margin: 0 0 1rem;
+    text-transform: uppercase;
 }
 
 h1 {
     font-family: 'Campaign-Slab', 'Courier New', monospace;
-    font-size: 5rem;
-    padding-top: 15rem;
-    padding-bottom: 0.5rem;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 400;
+    letter-spacing: -0.04em;
     line-height: 5rem;
     margin: 0;
 }
 
-h2 {
-    font-size: 1.5rem;
-    margin: 0;
-    padding: 0;
-    font-weight: 250;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+.tagline {
+    color: var(--muted);
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    line-height: 1.7;
+    margin: 1.5rem 0 0;
+    max-width: 590px;
 }
 
-.header {
-    color: #EBEBEB;
-    padding: 0 3.5rem;
+.tagline span {
+    color: var(--ink);
 }
 
 .card-container {
-    margin-top: 2rem;
-    display: flex;
-    margin-left: auto;
-    margin-right: auto;
-    width: 80%;
-    text-align: center;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.card-container a {
+    color: var(--ink);
 }
 
 .card {
-    padding: 2rem;
-    color: #EBEBEB;
-    border-radius: 30px;
-    border: #d4a388 1px solid;
-    width: 350px;
+    min-height: 220px;
+    padding: 1.75rem;
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
-.card h3 {
-    text-transform: uppercase;
-    font-size: 1.2rem;
-    font-weight: 500;
+.card::after {
+    content: "";
+    position: absolute;
+    width: 11rem;
+    height: 11rem;
+    border-radius: 50%;
+    background: rgba(232, 185, 143, 0.09);
+    right: -5rem;
+    bottom: -6rem;
+}
+
+.card:hover,
+.card:focus-within {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    background: rgba(47, 38, 34, 0.72);
+}
+
+.icon-wrap {
+    width: 3.25rem;
+    height: 3.25rem;
+    flex: 0 0 3.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.9rem;
+    background: rgba(232, 185, 143, 0.14);
+    color: var(--accent);
+    font-size: 1.35rem;
+}
+
+.card-copy {
+    position: relative;
+    z-index: 1;
+}
+
+.card-label {
+    margin-bottom: 0.7rem;
+}
+
+.card h2 {
+    font-family: 'Campaign-Slab', 'Courier New', monospace;
+    font-size: clamp(1.55rem, 3vw, 2.1rem);
+    font-weight: 400;
+    margin: 0 0 0.65rem;
+}
+
+.card-copy > p:last-child {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.65;
     margin: 0;
-    margin-bottom: 0.3rem;
+    max-width: 28rem;
 }
 
-.card p {
-    margin: 0;
-    font-weight: 250;
-    letter-spacing: 0.8px;
-}
-
-.card i {
-    font-size: 3rem;
-}
-
-.card:hover {
-    border-color: #ebebeb; 
-    color: none;
+.arrow {
+    color: var(--accent);
+    font-size: 1.4rem;
+    margin-left: auto;
+    position: relative;
+    z-index: 1;
 }
 
 footer {
-    position: absolute;
-    bottom: 0;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    color: #d4a388;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    padding: 1.5rem;
+    text-align: center;
 }
 
 footer p {
-    text-align: center;
+    margin: 0;
 }
 
 a {
@@ -97,52 +180,35 @@ a {
 
 @media (max-width: 1000px) {
     body {
-        background-position-x: 60%;
-        background-position-y: 30%;
-        background-size: 300%;
-        overflow-y: auto;
+        background-position: 62% center;
+    }
+
+    .page-shell {
+        padding-top: 2.5rem;
+    }
+}
+
+@media (max-width: 650px) {
+    .page-shell {
+        width: min(100% - 2rem, 34rem);
+        padding-top: 2rem;
+    }
+
+    .header {
+        margin-bottom: 2.5rem;
     }
 
     h1 {
-        padding-top: 4rem;
-        font-size: 2rem;
-        line-height: 2rem;
+        font-size: 3.5rem;
+        line-height: 1;
     }
 
-    h2 {
-        font-size: 1rem;
-    }
-
-    footer {
-        position: absolute;
-        bottom: 0;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
+    .card-container {
+        grid-template-columns: 1fr;
     }
 
     .card {
-        padding: 1rem;
-        max-width: 70%;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .card h3 {
-        text-transform: uppercase;
-        font-size: 1rem;
-        font-weight: 500;
-        margin: 0;
-        margin-bottom: 0.3rem;
-    }
-
-    .card p {
-        margin: 0;
-        font-weight: 250;
-        letter-spacing: 0.8px;
-        font-size: 0.8rem;
-    }
-
-    .card i {
-        font-size: 1rem;
+        min-height: 0;
+        padding: 1.35rem;
     }
 }
