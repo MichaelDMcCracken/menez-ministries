@@ -60,3 +60,29 @@ test('publishChangesRemotely rejects invalid staged dataset payload', async () =
     /complete sermon dataset object is required/i,
   );
 });
+
+test('publishChangesRemotely uses default commit message when omitted', async () => {
+  let committedMessage = '';
+  const publisher = {
+    async getFileText(filePath) {
+      if (filePath === 'sermons-data.json') return JSON.stringify({ john: { sermons: [] } });
+      if (filePath === 'library.html') return '<html></html>';
+      throw new Error('Unexpected file');
+    },
+    async commitFiles(_files, message) {
+      committedMessage = message;
+      return { changed: true, commitSha: 'def456', branch: 'main' };
+    },
+  };
+
+  await publishChangesRemotely(publisher, {
+    data: {
+      john: { sermons: [{ title: 'Sermon', url: 'https://example.com/sermon' }] },
+    },
+  });
+
+  assert.match(
+    committedMessage,
+    /^Publish staged sermon changes \(\d{4}-\d{2}-\d{2}\)$/,
+  );
+});

@@ -64,6 +64,10 @@
             <input id="title" name="title" required>
 
             <label>Bible passage</label>
+            <label style="font-weight:500;">
+                <input id="no-passage" type="checkbox" style="width:auto; margin-right:8px; margin-bottom:0;">
+                No passage for this sermon
+            </label>
             <div class="grid">
                 <div>
                     <label for="start-chapter">Start chapter</label>
@@ -136,6 +140,7 @@
         const editingSermonIdInput = document.getElementById('editing-sermon-id');
         const cancelEditButton = document.getElementById('cancel-edit');
         const keepLegacyPassageCheckbox = document.getElementById('keep-legacy-passage');
+        const noPassageCheckbox = document.getElementById('no-passage');
         const legacyPassageWrap = document.getElementById('legacy-passage-wrap');
         const legacyPassageText = document.getElementById('legacy-passage-text');
         const pendingContainer = document.getElementById('pending-container');
@@ -342,6 +347,14 @@
                 return;
             }
 
+            function updatePassageInputAvailability() {
+                const disableSelectors = noPassageCheckbox.checked || (legacyPassageValue && keepLegacyPassageCheckbox.checked);
+                startChapterSelect.disabled = disableSelectors || !getSelectedBookMeta();
+                startVerseSelect.disabled = disableSelectors || !getSelectedBookMeta();
+                endChapterSelect.disabled = disableSelectors || !getSelectedBookMeta();
+                endVerseSelect.disabled = disableSelectors || !endChapterSelect.value || disableSelectors;
+            }
+
             const startChapter = Number(startChapterSelect.value || '1');
             const startVerse = Number(startVerseSelect.value || '1');
             const minVerse = endChapter === startChapter ? startVerse : 1;
@@ -364,11 +377,13 @@
             editingSermonIdInput.value = '';
             legacyPassageValue = '';
             keepLegacyPassageCheckbox.checked = true;
+            noPassageCheckbox.checked = false;
             legacyPassageWrap.classList.add('hidden');
             cancelEditButton.classList.add('hidden');
             renderBookOptions(bookSelect.value || 'genesis');
             if (!bookSelect.value) bookSelect.value = 'genesis';
             renderChapterOptions();
+            updatePassageInputAvailability();
             commitMessageInput.value = '';
         }
 
@@ -405,6 +420,10 @@
         function formatPassageFromSelection() {
             if (legacyPassageValue && keepLegacyPassageCheckbox.checked) {
                 return legacyPassageValue;
+            }
+
+            if (noPassageCheckbox.checked) {
+                return '';
             }
 
             const meta = getSelectedBookMeta();
@@ -585,6 +604,7 @@
             const parsedPassage = parseExistingPassage(book, sermon.passage || '');
             legacyPassageValue = '';
             legacyPassageWrap.classList.add('hidden');
+            noPassageCheckbox.checked = false;
 
             if (parsedPassage) {
                 startChapterSelect.value = String(parsedPassage.startChapter);
@@ -604,7 +624,10 @@
                 keepLegacyPassageCheckbox.checked = true;
                 legacyPassageText.textContent = `Existing passage: ${sermon.passage}`;
                 legacyPassageWrap.classList.remove('hidden');
+            } else {
+                noPassageCheckbox.checked = true;
             }
+            updatePassageInputAvailability();
 
             showStatus(`Editing sermon from ${getBookDisplayName(book)}. Stage Changes to save locally.`, 'success');
         }
@@ -707,6 +730,8 @@
                 showStatus(error.message, 'error');
                 computePendingChanges();
                 renderPendingChanges();
+            } finally {
+                publishButton.disabled = false;
             }
         }
 
@@ -747,10 +772,13 @@
 
         bookSelect.addEventListener('change', () => {
             renderChapterOptions();
+            updatePassageInputAvailability();
         });
         startChapterSelect.addEventListener('change', updateStartVerseOptions);
         startVerseSelect.addEventListener('change', updateEndVerseOptions);
         endChapterSelect.addEventListener('change', updateEndVerseOptions);
+        noPassageCheckbox.addEventListener('change', updatePassageInputAvailability);
+        keepLegacyPassageCheckbox.addEventListener('change', updatePassageInputAvailability);
         publishButton.addEventListener('click', publishChanges);
 
         sermonsContainer.addEventListener('click', event => {
