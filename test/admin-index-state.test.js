@@ -29,7 +29,7 @@ function createElement() {
 function loadAdminHooks() {
   const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
-  const match = html.match(/<script>([\s\S]*)<\/script>/);
+  const match = html.match(/<script[^>]*>([\s\S]*)<\/script>/i);
   if (!match) {
     throw new Error('Inline admin script not found');
   }

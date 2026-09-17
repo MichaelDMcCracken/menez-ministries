@@ -292,6 +292,10 @@
         function renderChapterOptions() {
             const book = getSelectedBookMeta();
             const chapters = Array.isArray(book?.chapters) ? book.chapters : [];
+            const previousStartChapter = startChapterSelect.value;
+            const previousStartVerse = startVerseSelect.value;
+            const previousEndChapter = endChapterSelect.value;
+            const previousEndVerse = endVerseSelect.value;
             startChapterSelect.innerHTML = chapters.map((_, index) => `<option value="${index + 1}">Chapter ${index + 1}</option>`).join('');
             if (!chapters.length) {
                 startChapterSelect.innerHTML = '<option value="">N/A</option>';
@@ -307,24 +311,28 @@
             startChapterSelect.disabled = false;
             startVerseSelect.disabled = false;
             endChapterSelect.disabled = false;
-            updateStartVerseOptions();
-            updateEndChapterOptions();
+            if (previousStartChapter && Number(previousStartChapter) >= 1 && Number(previousStartChapter) <= chapters.length) {
+                startChapterSelect.value = previousStartChapter;
+            }
+            updateStartVerseOptions(previousStartVerse, previousEndChapter, previousEndVerse);
         }
 
-        function updateStartVerseOptions() {
+        function updateStartVerseOptions(preferredStartVerse, preferredEndChapter, preferredEndVerse) {
             const book = getSelectedBookMeta();
             const chapter = Number(startChapterSelect.value || '1');
             const versesInChapter = book?.chapters?.[chapter - 1] || 1;
-            const previous = Number(startVerseSelect.value || '1');
+            const fallback = preferredStartVerse !== undefined ? preferredStartVerse : startVerseSelect.value;
+            const previous = Number(fallback || '1');
             startVerseSelect.innerHTML = Array.from({ length: versesInChapter }, (_, i) => `<option value="${i + 1}">Verse ${i + 1}</option>`).join('');
             startVerseSelect.value = String(Math.min(previous, versesInChapter));
-            updateEndChapterOptions();
+            updateEndChapterOptions(preferredEndChapter, preferredEndVerse);
         }
 
-        function updateEndChapterOptions() {
+        function updateEndChapterOptions(preferredEndChapter, preferredEndVerse) {
             const book = getSelectedBookMeta();
             const startChapter = Number(startChapterSelect.value || '1');
-            const previous = endChapterSelect.value;
+            const fallback = preferredEndChapter !== undefined ? preferredEndChapter : endChapterSelect.value;
+            const previous = fallback;
             const chapters = Array.isArray(book?.chapters) ? book.chapters : [];
             const options = ['<option value="">None</option>'];
             for (let chapter = startChapter; chapter <= chapters.length; chapter += 1) {
@@ -334,10 +342,10 @@
             if (previous && Number(previous) >= startChapter && Number(previous) <= chapters.length) {
                 endChapterSelect.value = previous;
             }
-            updateEndVerseOptions();
+            updateEndVerseOptions(preferredEndVerse);
         }
 
-        function updateEndVerseOptions() {
+        function updateEndVerseOptions(preferredEndVerse) {
             const book = getSelectedBookMeta();
             const endChapter = Number(endChapterSelect.value || '0');
             if (!endChapter || !book) {
@@ -351,7 +359,8 @@
             const startVerse = Number(startVerseSelect.value || '1');
             const minVerse = endChapter === startChapter ? startVerse : 1;
             const versesInChapter = book.chapters[endChapter - 1] || minVerse;
-            const previous = Number(endVerseSelect.value || minVerse);
+            const fallback = preferredEndVerse !== undefined ? preferredEndVerse : endVerseSelect.value;
+            const previous = Number(fallback || minVerse);
             endVerseSelect.innerHTML = ['<option value="">Select verse</option>', ...Array.from({ length: Math.max(versesInChapter - minVerse + 1, 0) }, (_, i) => {
                 const verse = minVerse + i;
                 return `<option value="${verse}">Verse ${verse}</option>`;
@@ -787,6 +796,8 @@
         });
 
         bookSelect.addEventListener('change', () => {
+            legacyPassageValue = '';
+            legacyPassageWrap.classList.add('hidden');
             renderChapterOptions();
             updatePassageInputAvailability();
         });
