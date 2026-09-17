@@ -392,6 +392,24 @@
             return BOOK_BY_SLUG[slug]?.name || slug.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
         }
 
+        function cleanupBookIfEmpty(book) {
+            const bookData = workingData[book];
+            if (!bookData) return;
+            const hasSubtitle = Boolean((bookData.subtitle || '').trim());
+            const sermonCount = Array.isArray(bookData.sermons) ? bookData.sermons.length : 0;
+            if (!sermonCount && !hasSubtitle) {
+                delete workingData[book];
+            }
+        }
+
+        function resolveStagedState(stagedState, publishedSignature) {
+            if (!stagedState) return { action: 'none' };
+            if (stagedState.baseSignature === publishedSignature) {
+                return { action: 'restore', workingData: stagedState.workingData };
+            }
+            return { action: 'discard' };
+        }
+
         function parseExistingPassage(bookSlug, passage) {
             const text = String(passage || '').trim();
             if (!text) return null;
@@ -643,6 +661,7 @@
 
             const { book, index } = found;
             workingData[book].sermons.splice(index, 1);
+            cleanupBookIfEmpty(book);
 
             if (editingSermonIdInput.value === sermonId) {
                 resetForm();
@@ -680,6 +699,7 @@
                 const found = findSermonById(editingId);
                 if (found) {
                     workingData[found.book].sermons.splice(found.index, 1);
+                    cleanupBookIfEmpty(found.book);
                 }
             }
 
@@ -738,10 +758,11 @@
             publishedData = ensureIds(data);
 
             const staged = loadStagedState();
-            if (staged && staged.baseSignature === createDatasetSignature(publishedData)) {
-                workingData = ensureIds(staged.workingData);
+            const stagedResolution = resolveStagedState(staged, createDatasetSignature(publishedData));
+            if (stagedResolution.action === 'restore') {
+                workingData = ensureIds(stagedResolution.workingData);
                 showStatus('Restored unpublished staged changes from this browser.', 'success');
-            } else if (staged) {
+            } else if (stagedResolution.action === 'discard') {
                 localStorage.removeItem(STORAGE_KEY);
                 workingData = deepClone(publishedData);
                 showStatus('Discarded outdated staged changes because published sermons changed.', 'error');
@@ -807,7 +828,13 @@
             event.returnValue = '';
         });
 
-        loadData().catch(error => showStatus(error.message, 'error'));
+        window.__SERMON_ADMIN_TEST_HOOKS__ = {
+            resolveStagedState,
+        };
+
+        if (!window.__SERMON_ADMIN_DISABLE_AUTOLOAD__) {
+            loadData().catch(error => showStatus(error.message, 'error'));
+        }
     </script>
 </body>
 </html>

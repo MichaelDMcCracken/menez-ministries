@@ -202,7 +202,17 @@ function createServer() {
         }
 
         await execCommand('git add sermons-data.json library.html sermons', { cwd: ROOT });
-        await execCommand(`git diff --cached --quiet || git commit -m ${JSON.stringify(commitMessage)}`, { cwd: ROOT });
+        const { stdout: stagedFiles } = await execCommand('git diff --cached --name-only', { cwd: ROOT });
+        if (!stagedFiles.trim()) {
+          sendJson(res, 200, {
+            message: 'No changes were needed.',
+            stdout: '',
+            stderr: ''
+          });
+          return;
+        }
+
+        await execCommand(`git commit -m ${JSON.stringify(commitMessage)}`, { cwd: ROOT });
         const { stdout, stderr } = await execCommand('git push', { cwd: ROOT });
         sendJson(res, 200, {
           message: 'Staged sermon changes published successfully.',
