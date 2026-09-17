@@ -1,288 +1,300 @@
-html, body {
+:root {
+    --ink: #f8f5ef;
+    --muted: rgba(248, 245, 239, 0.68);
+    --accent: #e8b98f;
+    --line: rgba(255, 255, 255, 0.16);
+    --panel: rgba(27, 24, 23, 0.62);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
     margin: 0;
-    padding: 0;
-    font-family: 'lexend';
+    color: var(--ink);
+    background: #211b18 url("../img/frm-cover.jpg") center / cover fixed no-repeat;
+    font-family: 'Lexend', sans-serif;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(25, 20, 18, 0.92), rgba(25, 20, 18, 0.55) 60%, rgba(25, 20, 18, 0.82));
+    z-index: -1;
 }
 
 .banner {
-    text-align: center;
-    padding: 5rem;
-    color: #fff;
-    background-image: url(../img/frm-cover.jpg);
-    background-size: cover;
-    background-position: 50% 38%;
+    padding: 3.5rem max(1.5rem, calc((100% - 1120px) / 2)) 4.5rem;
+    background: linear-gradient(180deg, rgba(20, 17, 15, 0.48), rgba(20, 17, 15, 0.18));
+}
+
+.home-link {
+    display: inline-block;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: color 180ms ease;
+}
+
+.home-link:hover,
+.home-link:focus-visible {
+    color: var(--accent);
+}
+
+.eyebrow,
+.section-label,
+.recent-label {
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    margin: 2.75rem 0 0.9rem;
+    text-transform: uppercase;
 }
 
 .banner h1 {
     font-family: 'Campaign-Slab', 'Courier New', monospace;
-    font-size: 3.5rem;
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
     margin: 0;
 }
 
-.banner h3 {
-    font-weight: 200;
-    font-size: 2rem;
-    margin-top: 0;
-    margin-bottom: 0;
-    letter-spacing: 0.15rem;
-}
-
-h1 {
-    font-family: 'Campaign-Slab', 'Courier New', monospace;
-    margin-bottom: 1rem;
-}
-
-h2 {
-    padding-bottom: 0.5rem;
-    font-family: 'Lexend', 'Arial', sans-serif
-}
-
-h3 {
-    font-weight: 200;
-    font-size: 1.2rem;
-    margin-top: -0.5rem;
-    letter-spacing: 0.15rem;
+.banner-subtitle {
+    color: var(--muted);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    margin: 1.25rem 0 0;
 }
 
 main {
-    min-height: 60vh;
+    width: min(1120px, calc(100% - 3rem));
+    margin: 0 auto;
+    padding-bottom: 4rem;
 }
 
-.recent-label {
-    text-align: left;
-    color: #d4a388;
-    text-transform: uppercase;
+.full-bar {
+    margin-bottom: 4.5rem;
+}
+
+.full-bar > a {
+    color: var(--ink);
 }
 
 .recent {
-    margin-top: 0rem;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 35px;
-    padding-left: 35px;
-    padding-right: 15px;
-    padding-bottom: 15px;
-    padding-top: 15px;
-    background: #7a3d2d;
-    background: linear-gradient(-120deg, rgba(212, 174, 136, 1) 0%, rgba(122, 61, 45, 1) 100%);
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    backdrop-filter: blur(12px);
     display: grid;
-    grid-template-columns: 7fr 1fr;
-    margin-bottom: 0.5rem;
+    gap: 1.5rem;
+    grid-template-columns: 1fr auto;
+    padding: 1.5rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
-.recent:hover {
-    background: #695E3F;
-    background: linear-gradient(90deg, #7A3D2D 0%, #FBFBE3 100%);
+.recent::after {
+    background: rgba(232, 185, 143, 0.1);
+    border-radius: 50%;
+    content: "";
+    height: 10rem;
+    position: absolute;
+    left: -5rem;
+    bottom: -6rem;
+    width: 10rem;
+}
+
+.recent:hover,
+.recent:focus-visible {
+    background: rgba(47, 38, 34, 0.78);
+    border-color: var(--accent);
+    transform: translateY(-3px);
+}
+
+.recent-label {
+    margin: 0 0 0.75rem;
 }
 
 .recent-title {
-    padding-right: 1rem;
-    font-size: 1.4rem;
-    letter-spacing: 0.05rem;
-    font-weight: 600;
-    color: #fff;
-    text-align: left;
+    font-family: 'Campaign-Slab', 'Courier New', monospace;
+    font-size: clamp(1.45rem, 3vw, 2.2rem);
+    line-height: 1.1;
+    margin-bottom: 0.6rem;
+    position: relative;
+    z-index: 1;
 }
 
 .scripture {
-    color: #fff;
-    text-align: left;
-    font-weight: 300;
-    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 1;
 }
 
 .recent-date {
-    font-weight: 600;
-    border-radius: 20px;
-    color: #FFF;
     align-items: center;
-    display: grid;
-    letter-spacing: 0.05rem;
-    font-size: 1.2rem;
-    background-color: #222;
-    min-width: 6rem;
+    border-left: 1px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    justify-content: center;
+    min-height: 4.5rem;
+    min-width: 5rem;
+    padding-left: 1.25rem;
+    position: relative;
     text-align: center;
+    z-index: 1;
+}
+
+.date-month {
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+.date-day {
+    color: var(--ink);
+    font-family: 'Campaign-Slab', 'Courier New', monospace;
+    font-size: 2.5rem;
+    font-weight: 400;
+    line-height: 0.9;
+}
+
+.testament {
+    margin-bottom: 4rem;
+}
+
+.section-heading {
+    align-items: end;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+}
+
+.section-label {
+    margin: 0;
+}
+
+h2 {
+    font-family: 'Campaign-Slab', 'Courier New', monospace;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 400;
+    margin: 0;
+}
+
+.fl {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .gr {
-    color: #aaa;
-    font-weight: 400;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    font-size: 0.88rem;
+    min-height: 3.25rem;
+    padding: 0.75rem;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
-a {
-    color: #7a3d2d;
+.gr:has(a) {
+    color: var(--ink);
+}
+
+.gr:has(a):hover {
+    background: rgba(47, 38, 34, 0.82);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.gr a {
+    color: inherit;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    font-weight: 500;
     text-decoration: none;
-    font-weight: 600;
-    transition: 0.3s;
 }
 
-a:visited {
-    color: #1a1a1a;
-}
-
-a:hover {
-    color: #d4a388;
+.gr a:focus-visible,
+.home-link:focus-visible,
+.full-bar a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
 }
 
 footer {
-    background-color: #fafafa;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    padding: 1.5rem;
     text-align: center;
-    padding: 1rem;
-    color: #aaa;
-    font-size: 0.8rem;
 }
 
-@media (min-width: 1000px) {
-    hr {
-        width: 5rem;
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
+@media (max-width: 800px) {
+    .banner {
+        padding-top: 2.5rem;
+    }
+
+    main {
+        width: min(100% - 2rem, 40rem);
+    }
+
+    .fl {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    .banner h1 {
+        font-size: 3.3rem;
     }
 
     .recent {
-        width: 50%;
-    }
-    
-    main {
-        margin: 1rem 3rem 3rem 3rem;
-        text-align: center;
-    }
-
-    .fl {
-        display: grid;
-        grid-template-columns: repeat(5, 10rem);
-        gap: 5px;
-        justify-content: center;
-    }
-
-    .gr {
-        padding: 0.5rem;
-    }
-
-    th,
-    td {
-        padding: 0.7rem 3rem;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
-
-    iframe {
-        width: 80%;
-        margin-top: 1rem;
-    }
-}
-
-@media (max-width: 1000px) {
-    hr {
-        width: 5rem;
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    
-    main {
-        margin-right: 1.3rem;
-        margin-left: 1.3rem;
-        text-align: center;
-    }
-
-    .recent-title {
-        font-size: 1rem;
-    }
-
-    .recent-label {
-        font-size: 0.8rem;
-        letter-spacing: 0.3px;
+        align-items: start;
+        grid-template-columns: 1fr;
+        padding: 1.25rem;
     }
 
     .recent-date {
-        font-size: 1rem;
+        align-items: baseline;
+        flex-direction: row;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        min-width: 0;
+        padding: 0.75rem 0 0;
+        width: 100%;
+        border-left: 0;
+        border-top: 1px solid var(--accent);
     }
 
-    .scripture {
-        font-size: 0.8rem;
+    .date-day {
+        font-size: 1.8rem;
     }
 
-    .fl {
-        display: grid;
-        grid-template-columns: repeat(2, 10rem);
-        gap: 5px;
-        justify-content: center;
+    .section-heading {
+        align-items: start;
+        flex-direction: column;
+        gap: 0.55rem;
     }
-
-    .gr {
-        padding: 0.5rem;
-    }
-
-    a {
-        color: #7a3d2d;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-    a:visited {
-        color: #1a1a1a;
-    }
-
-    a:hover {
-        color: #d4a388;
-    }
-
-    th,
-    td {
-        padding: 0.5rem 0.25rem;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-        font-size: 0.75rem;
-    }
-
-    iframe {
-        width: 90%;
-        margin-top: 1rem;
-    }
-
-    .banner {
-        text-align: center;
-        padding: 2rem;
-        color: #fff;
-        background-image: url(../img/frm-cover.jpg);
-        background-size: cover;
-        background-position: 50% 38%;
-        margin-bottom: 1rem;
-    }
-
-    .banner h1 {
-        font-family: 'Campaign-Slab', 'Courier New', monospace;
-        font-size: 2rem;
-        margin-top: 0;
-    }
-        
-    .banner h3 {
-        font-weight: 200;
-        font-size: 1.1rem;
-        margin-top: 0;
-        margin-bottom: 0;
-        letter-spacing: 0.15rem;
-    }
-
-    h1 {
-        font-family: 'Campaign-Slab', 'Courier New', monospace;
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-    }
-
-    h2 {
-        padding-bottom: 0.5rem;
-        font-family: 'Lexend', 'Arial', sans-serif
-    }
-
-    h3 {
-        font-weight: 200;
-        font-size: 1rem;
-        margin-top: -0.5rem;
-        letter-spacing: 0.15rem;
-    }
-
-    
 }
-
