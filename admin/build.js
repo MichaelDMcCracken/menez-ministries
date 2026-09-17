@@ -81,16 +81,52 @@ function formatDate(dateStr) {
   return `${month} ${day}`;
 }
 
+function replaceTag(html, marker, replacement) {
+  const start = html.indexOf(marker);
+  if (start === -1) {
+    return html;
+  }
+
+  const end = html.indexOf('>', start);
+  if (end === -1) {
+    return html;
+  }
+
+  return html.slice(0, start) + replacement + html.slice(end + 1);
+}
+
+function replaceDivBlock(html, className, id, value) {
+  const marker = `<div class="${className}"`;
+  const start = html.indexOf(marker);
+  if (start === -1) {
+    return html;
+  }
+
+  const contentStart = html.indexOf('>', start);
+  if (contentStart === -1) {
+    return html;
+  }
+
+  const end = html.indexOf('</div>', contentStart);
+  if (end === -1) {
+    return html;
+  }
+
+  return html.slice(0, start) +
+    `<div class="${className}" id="${id}">\n                    ${value}\n                </div>` +
+    html.slice(end + '</div>'.length);
+}
+
 function updateLibraryHTML(html, latestSermon) {
   if (!latestSermon || !latestSermon.date) {
     return html;
   }
 
   const formattedDate = formatDate(latestSermon.date);
-  let nextHtml = html.replace(/<a id="recent-link"[^>]*href="[^"]*">/, `<a id="recent-link" data-loading="true" href="${latestSermon.url}">`);
-  nextHtml = nextHtml.replace(/<div class="recent-title"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-title" id="recent-title">\n                    ${latestSermon.title}\n                </div>`);
-  nextHtml = nextHtml.replace(/<div class="scripture"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="scripture" id="recent-passage">\n                    ${latestSermon.passage || ''}\n                </div>`);
-  nextHtml = nextHtml.replace(/<div class="recent-date"[^>]*>\s*[^<]*\s*<\/div>/, `<div class="recent-date" id="recent-date">\n                    ${formattedDate}\n                </div>`);
+  let nextHtml = replaceTag(html, '<a id="recent-link"', `<a id="recent-link" data-loading="true" href="${latestSermon.url}">`);
+  nextHtml = replaceDivBlock(nextHtml, 'recent-title', 'recent-title', latestSermon.title);
+  nextHtml = replaceDivBlock(nextHtml, 'scripture', 'recent-passage', latestSermon.passage || '');
+  nextHtml = replaceDivBlock(nextHtml, 'recent-date', 'recent-date', formattedDate);
   return nextHtml;
 }
 
