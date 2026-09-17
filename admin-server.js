@@ -9,12 +9,13 @@ const {
   applyDeleteSermon,
   applySaveSermon,
   computeAddedAndUpdated,
+  validateSermonDataset,
 } = require('./lib/sermon-data');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'sermons-data.json');
-const ADMIN_FILE = path.join(ROOT, 'admin.html');
+const ADMIN_FILE = path.join(ROOT, 'admin', 'index.html');
 
 function execCommand(command, options = {}) {
   return new Promise((resolve, reject) => {
@@ -181,6 +182,46 @@ function createServer() {
       } catch (result) {
         sendJson(res, 500, {
           error: 'Build and push failed. See stderr for details.',
+          stdout: result.stdout,
+          stderr: result.stderr
+        });
+      }
+      return;
+    }
+
+    if ((pathname === '/publish-changes' || pathname === '/api/publish-changes') && req.method === 'POST') {
+      try {
+        const body = await parseJsonBody(req);
+        const data = validateSermonDataset(body.data);
+        saveData(data);
+        writeBuildOutputs();
+
+        let commitMessage = typeof body.commitMessage === 'string' ? body.commitMessage.trim() : '';
+        if (!commitMessage) {
+          commitMessage = `Publish staged sermon changes (${new Date().toISOString().slice(0, 10)})`;
+        }
+
+        await execCommand('git add sermons-data.json library.html sermons', { cwd: ROOT });
+        const { stdout: stagedFiles } = await execCommand('git diff --cached --name-only', { cwd: ROOT });
+        if (!stagedFiles.trim()) {
+          sendJson(res, 200, {
+            message: 'No changes were needed.',
+            stdout: '',
+            stderr: ''
+          });
+          return;
+        }
+
+        await execCommand(`git commit -m ${JSON.stringify(commitMessage)}`, { cwd: ROOT });
+        const { stdout, stderr } = await execCommand('git push', { cwd: ROOT });
+        sendJson(res, 200, {
+          message: 'Staged sermon changes published successfully.',
+          stdout,
+          stderr
+        });
+      } catch (result) {
+        sendJson(res, 500, {
+          error: result.message || 'Unable to publish staged sermon changes.',
           stdout: result.stdout,
           stderr: result.stderr
         });

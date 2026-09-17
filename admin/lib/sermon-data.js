@@ -147,6 +147,59 @@ function findLatestSermon(data) {
   return latestSermon;
 }
 
+function validateSermonDataset(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('A complete sermon dataset object is required.');
+  }
+
+  const nextData = {};
+
+  for (const [rawBook, rawBookData] of Object.entries(data)) {
+    const book = normalizeString(rawBook);
+    if (!book) {
+      throw new Error('Book slug is required.');
+    }
+    if (!rawBookData || typeof rawBookData !== 'object' || Array.isArray(rawBookData)) {
+      throw new Error(`Book data for "${book}" is invalid.`);
+    }
+
+    const sermons = Array.isArray(rawBookData.sermons) ? rawBookData.sermons : null;
+    if (!sermons) {
+      throw new Error(`Sermons list for "${book}" is required.`);
+    }
+
+    const nextBookData = {};
+    const subtitle = normalizeString(rawBookData.subtitle);
+    if (subtitle) {
+      nextBookData.subtitle = subtitle;
+    }
+
+    nextBookData.sermons = sermons.map((rawSermon, index) => {
+      if (!rawSermon || typeof rawSermon !== 'object' || Array.isArray(rawSermon)) {
+        throw new Error(`Sermon ${index + 1} in "${book}" is invalid.`);
+      }
+
+      const title = normalizeString(rawSermon.title);
+      const url = normalizeString(rawSermon.url);
+      if (!title || !url) {
+        throw new Error(`Sermon ${index + 1} in "${book}" requires title and URL.`);
+      }
+
+      const sermon = { title, url };
+      const passage = normalizeString(rawSermon.passage);
+      const date = normalizeString(rawSermon.date);
+      if (passage) sermon.passage = passage;
+      if (date) sermon.date = date;
+      return sermon;
+    });
+
+    nextBookData.sermons = sortSermonsByReference(nextBookData.sermons);
+    nextData[book] = nextBookData;
+  }
+
+  return nextData;
+}
+
 module.exports = {
   applyDeleteSermon,
   applySaveSermon,
@@ -155,4 +208,5 @@ module.exports = {
   normalizeString,
   parsePassageReference,
   sortSermonsByReference,
+  validateSermonDataset,
 };
