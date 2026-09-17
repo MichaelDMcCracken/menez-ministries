@@ -16,15 +16,18 @@ function generateBookHTML(book, bookData) {
   const bookTitle = capitalize(book.replace(/-/g, ' '));
   const pageTitle = `Sermons from ${bookTitle}`;
   const hasPassage = sermons.some(s => s.passage);
+  const hasDate = sermons.some(s => s.date);
 
   let tableRows = '';
   sermons.forEach(sermon => {
     const passageCell = sermon.passage ? `<td>${sermon.passage}</td>` : '';
     const titleCell = `<td><a href="${sermon.url}">${sermon.title}</a></td>`;
+    const dateCell = hasDate ? `<td class="date-cell">${sermon.date ? formatFullDate(sermon.date) : ''}</td>` : '';
     tableRows += `
                 <tr>
                     ${passageCell}
                     ${titleCell}
+                    ${dateCell}
                 </tr>`;
   });
 
@@ -60,6 +63,7 @@ function generateBookHTML(book, bookData) {
                 <tr>
                     ${hasPassage ? '<th>Passage</th>' : ''}
                     <th>Title</th>
+                    ${hasDate ? '<th>Date</th>' : ''}
                 </tr>
             </thead>
             <tbody id="sermons-tbody">${tableRows}
@@ -79,6 +83,11 @@ function formatDate(dateStr) {
   const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
   const day = date.getUTCDate();
   return `${month} ${day}`;
+}
+
+function formatFullDate(dateStr) {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 function replaceTag(html, marker, replacement) {
@@ -172,6 +181,7 @@ function runBuild(options = {}) {
 module.exports = {
   buildSiteFiles,
   formatDate,
+  formatFullDate,
   generateBookHTML,
   runBuild,
   updateLibraryHTML,
