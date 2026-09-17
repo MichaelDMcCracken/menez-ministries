@@ -5,6 +5,8 @@ const { publishChangesRemotely } = require('../lib/remote-admin');
 
 test('publishChangesRemotely validates and commits staged dataset in one operation', async () => {
   const calls = [];
+  let committedFiles = null;
+  let committedMessage = null;
   const publisher = {
     async getFileText(filePath) {
       calls.push(['getFileText', filePath]);
@@ -18,6 +20,8 @@ test('publishChangesRemotely validates and commits staged dataset in one operati
     },
     async commitFiles(files, message) {
       calls.push(['commitFiles', Object.keys(files), message]);
+      committedFiles = files;
+      committedMessage = message;
       return { changed: true, commitSha: 'abc123', branch: 'main' };
     },
   };
@@ -35,6 +39,10 @@ test('publishChangesRemotely validates and commits staged dataset in one operati
 
   assert.equal(result.changed, true);
   assert.equal(calls.filter(call => call[0] === 'commitFiles').length, 1);
+  assert.equal(committedMessage, 'Publish staged sermons');
+  assert.ok(typeof committedFiles['sermons-data.json'] === 'string');
+  assert.match(committedFiles['sermons-data.json'], /"john"/);
+  assert.match(committedFiles['sermons-data.json'], /"Sermon"/);
 });
 
 test('publishChangesRemotely rejects invalid staged dataset payload', async () => {

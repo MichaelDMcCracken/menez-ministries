@@ -195,6 +195,10 @@ numeric installation ID from the App installation URL.
 5. Click **Publish Changes** to send the full staged dataset to the server,
    regenerate site files, and create one GitHub commit.
 
+New sermon entries use the Bible-book dropdown flow. If older data already
+contains non-Bible slugs, they still appear in the working list and can be
+edited or deleted safely.
+
 ## Manual Build Commands
 
 If you need to run build commands from the terminal instead of using the admin page:
