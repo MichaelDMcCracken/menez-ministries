@@ -42,11 +42,30 @@ option is to keep `admin/` as the Vercel project root so `admin/index.html` and
 
 Set these server-side environment variables in Vercel:
 
-- `GITHUB_TOKEN` — GitHub App installation token or fine-grained token with
-  repository contents write access
+- `GITHUB_APP_ID` — the App ID shown on the GitHub App settings page
+- `GITHUB_APP_PRIVATE_KEY` — the full PEM private key generated for the App.
+  Paste the whole key into Vercel; escaped `\n` newlines also work.
+- `GITHUB_INSTALLATION_ID` — the numeric ID from the App installation for your
+  GitHub account. You can copy it from the installation URL, such as
+  `https://github.com/settings/installations/12345678`.
 - `GITHUB_OWNER` — optional; defaults to `MichaelDMcCracken`
 - `GITHUB_REPO` — optional; defaults to `menez-ministries`
 - `GITHUB_BRANCH` — optional; defaults to the repo default branch
+- `GITHUB_TOKEN` — optional fallback token for local/test deployments; not
+  needed when the GitHub App variables above are configured
+
+The hosted admin backend keeps those credentials server-side, creates a GitHub
+App JWT as needed, exchanges it for a short-lived installation access token, and
+refreshes that token automatically before it expires.
+
+Where those GitHub App values come from:
+
+1. In GitHub, open **Settings → Developer settings → GitHub Apps → your app**.
+2. Copy the **App ID** into `GITHUB_APP_ID`.
+3. In the same App settings, generate or view the private key PEM and paste it
+   into `GITHUB_APP_PRIVATE_KEY`.
+4. Open the App installation for your account/repository and copy the numeric ID
+   from the installation URL into `GITHUB_INSTALLATION_ID`.
 
 The hosted admin page reads and writes `sermons-data.json` through the GitHub
 API, regenerates the static pages server-side, and commits the results back to

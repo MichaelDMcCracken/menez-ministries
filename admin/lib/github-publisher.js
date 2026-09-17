@@ -2,6 +2,11 @@ const crypto = require('crypto');
 
 const DEFAULT_OWNER = 'MichaelDMcCracken';
 const DEFAULT_REPO = 'menez-ministries';
+const GITHUB_API_BASE_URL = 'https://api.github.com';
+const INSTALLATION_TOKEN_REFRESH_WINDOW_MS = 60 * 1000;
+const INSTALLATION_TOKEN_FALLBACK_TTL_MS = 50 * 60 * 1000;
+const installationTokenCache = new Map();
+const installationTokenRequestCache = new Map();
 
 function gitBlobSha(content) {
   return crypto.createHash('sha1')
@@ -17,48 +22,172 @@ function encodeRef(ref) {
   return ref.split('/').map(segment => encodeURIComponent(segment)).join('/');
 }
 
+function base64UrlEncode(value) {
+  return Buffer.from(value)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function normalizePrivateKey(privateKey) {
+  return typeof privateKey === 'string'
+    ? privateKey.replace(/\r\n/g, '\n').replace(/\\n/g, '\n')
+    : '';
+}
+
+function createGitHubAppJwt(appId, privateKey, nowMs) {
+  const signer = crypto.createSign('RSA-SHA256');
+  const issuedAt = Math.floor(nowMs / 1000) - 60;
+  const expiresAt = issuedAt + (9 * 60);
+  const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = base64UrlEncode(JSON.stringify({ iat: issuedAt, exp: expiresAt, iss: appId }));
+  const unsignedToken = `${header}.${payload}`;
+
+  signer.update(unsignedToken);
+  signer.end();
+
+  const signature = signer.sign(privateKey, 'base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+
+  return `${unsignedToken}.${signature}`;
+}
+
+async function readJsonResponse(response, fallbackMessage) {
+  const text = await response.text();
+  let parsed = null;
+
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch (error) {
+      parsed = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message = parsed && parsed.message ? parsed.message : text || fallbackMessage;
+    throw new Error(message);
+  }
+
+  return parsed;
+}
+
+function getInstallationCacheKey(owner, repo, appId, installationId) {
+  return `${owner}/${repo}:${appId}:${installationId}`;
+}
+
+function getExpirationTime(expiresAt, nowMs) {
+  const parsed = Date.parse(expiresAt || '');
+  return Number.isFinite(parsed)
+    ? parsed
+    : nowMs + INSTALLATION_TOKEN_FALLBACK_TTL_MS;
+}
+
+async function getInstallationAccessToken(fetchImpl, owner, repo, appId, privateKey, installationId, nowMs) {
+  const cacheKey = getInstallationCacheKey(owner, repo, appId, installationId);
+  const cached = installationTokenCache.get(cacheKey);
+
+  if (cached && cached.expiresAtMs - INSTALLATION_TOKEN_REFRESH_WINDOW_MS > nowMs) {
+    return cached.token;
+  }
+
+  const pendingRequest = installationTokenRequestCache.get(cacheKey);
+  if (pendingRequest) {
+    return pendingRequest;
+  }
+
+  const requestPromise = (async () => {
+    const jwt = createGitHubAppJwt(appId, privateKey, nowMs);
+    const response = await fetchImpl(`${GITHUB_API_BASE_URL}/app/installations/${installationId}/access_tokens`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': 'Bearer ' + jwt,
+        'Content-Type': 'application/json',
+        'User-Agent': 'menez-ministries-admin',
+      },
+    });
+    const result = await readJsonResponse(response, 'Unable to create GitHub installation token.');
+
+    if (!result || !result.token) {
+      throw new Error('GitHub did not return an installation access token.');
+    }
+
+    installationTokenCache.set(cacheKey, {
+      token: result.token,
+      expiresAtMs: getExpirationTime(result.expires_at, nowMs),
+    });
+
+    return result.token;
+  })();
+
+  installationTokenRequestCache.set(cacheKey, requestPromise);
+
+  try {
+    return await requestPromise;
+  } finally {
+    installationTokenRequestCache.delete(cacheKey);
+  }
+}
+
+function clearGitHubPublisherCache() {
+  installationTokenCache.clear();
+  installationTokenRequestCache.clear();
+}
+
 function createGitHubPublisher(options = {}) {
   const fetchImpl = options.fetchImpl || global.fetch;
-  const token = options.token || process.env.GITHUB_TOKEN;
   const owner = options.owner || process.env.GITHUB_OWNER || DEFAULT_OWNER;
   const repo = options.repo || process.env.GITHUB_REPO || DEFAULT_REPO;
+  const configuredToken = options.token || process.env.GITHUB_TOKEN;
+  const appId = options.appId || process.env.GITHUB_APP_ID || '';
+  const privateKey = normalizePrivateKey(options.privateKey || process.env.GITHUB_APP_PRIVATE_KEY || '');
+  const installationId = options.installationId || process.env.GITHUB_INSTALLATION_ID || '';
+  const now = typeof options.now === 'function' ? options.now : Date.now;
+  const useGitHubApp = !options.token && Boolean(appId && privateKey && installationId);
   let branch = options.branch || process.env.GITHUB_BRANCH || '';
 
   if (typeof fetchImpl !== 'function') {
     throw new Error('A fetch implementation is required.');
   }
 
-  if (!token) {
-    throw new Error('GITHUB_TOKEN is not configured.');
+  if (!useGitHubApp && !configuredToken) {
+    throw new Error('Configure GitHub App credentials or set GITHUB_TOKEN.');
+  }
+
+  async function getAuthorizationHeader() {
+    if (useGitHubApp) {
+      const installationToken = await getInstallationAccessToken(
+        fetchImpl,
+        owner,
+        repo,
+        appId,
+        privateKey,
+        installationId,
+        now(),
+      );
+      return 'Bearer ' + installationToken;
+    }
+
+    return 'Bearer ' + configuredToken;
   }
 
   async function request(method, apiPath, body) {
-    const response = await fetchImpl(`https://api.github.com/repos/${owner}/${repo}${apiPath}`, {
+    const response = await fetchImpl(`${GITHUB_API_BASE_URL}/repos/${owner}/${repo}${apiPath}`, {
       method,
       headers: {
         'Accept': 'application/vnd.github+json',
-        'Authorization': 'Bearer ' + token,
+        'Authorization': await getAuthorizationHeader(),
         'Content-Type': 'application/json',
         'User-Agent': 'menez-ministries-admin',
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
 
-    const text = await response.text();
-    let parsed = null;
-    if (text) {
-      try {
-        parsed = JSON.parse(text);
-      } catch (error) {
-        parsed = null;
-      }
-    }
-    if (!response.ok) {
-      const message = parsed && parsed.message ? parsed.message : text || `${method} ${apiPath} failed`;
-      throw new Error(message);
-    }
-
-    return parsed;
+    return readJsonResponse(response, `${method} ${apiPath} failed`);
   }
 
   async function getBranch() {
@@ -137,6 +266,9 @@ function createGitHubPublisher(options = {}) {
 }
 
 module.exports = {
+  clearGitHubPublisherCache,
+  createGitHubAppJwt,
   createGitHubPublisher,
   gitBlobSha,
+  normalizePrivateKey,
 };
