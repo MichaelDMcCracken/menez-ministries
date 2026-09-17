@@ -37,6 +37,11 @@ function loadAdminScript() {
 }
 
 function loadAdminHooks() {
+  const { context } = loadAdminRuntime();
+  return context.window.__SERMON_ADMIN_TEST_HOOKS__;
+}
+
+function loadAdminRuntime() {
   const elements = new Map();
   const document = {
     getElementById(id) {
@@ -67,7 +72,7 @@ function loadAdminHooks() {
 
   vm.createContext(context);
   vm.runInContext(loadAdminScript(), context);
-  return context.window.__SERMON_ADMIN_TEST_HOOKS__;
+  return { context, elements };
 }
 
 test('resolveStagedState restores when base signature matches', () => {
@@ -86,7 +91,19 @@ test('resolveStagedState discards when base signature differs', () => {
 });
 
 test('chapter and verse option labels are numeric-only', () => {
-  const script = loadAdminScript();
-  assert.doesNotMatch(script, />Chapter \$\{/);
-  assert.doesNotMatch(script, />Verse \$\{/);
+  const { context, elements } = loadAdminRuntime();
+  elements.get('book').value = 'genesis';
+  context.renderChapterOptions();
+
+  assert.match(elements.get('start-chapter').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('start-chapter').innerHTML, />Chapter /);
+  assert.match(elements.get('start-verse').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('start-verse').innerHTML, />Verse /);
+  assert.match(elements.get('end-chapter').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('end-chapter').innerHTML, />Chapter /);
+
+  elements.get('end-chapter').value = '1';
+  context.updateEndVerseOptions();
+  assert.match(elements.get('end-verse').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('end-verse').innerHTML, />Verse /);
 });
