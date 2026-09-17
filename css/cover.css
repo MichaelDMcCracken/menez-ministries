@@ -180,7 +180,11 @@ a {
 
 @media (max-width: 1000px) {
     body {
+        background-image: url("../img/frm-cover-mobile.jpg");
         background-position: 62% center;
+        /* iOS Safari can fail to paint large fixed backgrounds; scroll is
+           lighter-weight and more reliable on mobile devices. */
+        background-attachment: scroll;
     }
 
     .page-shell {
