@@ -26,14 +26,17 @@ function createElement() {
   };
 }
 
-function loadAdminHooks() {
+function loadAdminScript() {
   const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
   const match = html.match(/<script[^>]*>([\s\S]*)<\/script>/i);
   if (!match) {
     throw new Error('Inline admin script not found');
   }
+  return match[1];
+}
 
+function loadAdminHooks() {
   const elements = new Map();
   const document = {
     getElementById(id) {
@@ -63,7 +66,7 @@ function loadAdminHooks() {
   };
 
   vm.createContext(context);
-  vm.runInContext(match[1], context);
+  vm.runInContext(loadAdminScript(), context);
   return context.window.__SERMON_ADMIN_TEST_HOOKS__;
 }
 
@@ -80,4 +83,10 @@ test('resolveStagedState discards when base signature differs', () => {
   const staged = { baseSignature: 'abc', workingData: { john: { sermons: [] } } };
   const result = hooks.resolveStagedState(staged, 'xyz');
   assert.equal(result.action, 'discard');
+});
+
+test('chapter and verse option labels are numeric-only', () => {
+  const script = loadAdminScript();
+  assert.doesNotMatch(script, />Chapter \$\{/);
+  assert.doesNotMatch(script, />Verse \$\{/);
 });
