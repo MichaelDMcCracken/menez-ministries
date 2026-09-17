@@ -162,6 +162,12 @@ tbody tr:hover {
     background: rgba(255, 255, 255, 0.04);
 }
 
+.date-cell {
+    color: var(--muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
 main {
     width: min(1120px, calc(100% - 3rem));
     margin: 0 auto;
@@ -174,6 +180,80 @@ main {
 
 .full-bar > a {
     color: var(--ink);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.search-bar {
+    margin: 0 auto 2.5rem;
+}
+
+.search-bar input[type="search"] {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    color: var(--ink);
+    font-family: 'Lexend', sans-serif;
+    font-size: 1rem;
+    padding: 0.9rem 1.25rem;
+    width: 100%;
+}
+
+.search-bar input[type="search"]::placeholder {
+    color: var(--muted);
+}
+
+.search-bar input[type="search"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.search-results {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+}
+
+.search-result {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    color: var(--ink);
+    display: block;
+    padding: 0.85rem 1.25rem;
+    text-decoration: none;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.search-result:hover,
+.search-result:focus-visible {
+    background: rgba(47, 38, 34, 0.82);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.search-result-title {
+    font-weight: 500;
+}
+
+.search-result-meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.search-empty {
+    color: var(--muted);
 }
 
 .recent {

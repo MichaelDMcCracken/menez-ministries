@@ -18,6 +18,12 @@
             <p class="banner-subtitle">Recorded messages from Pastor Scott Menez</p>
         </header>
         <main>
+            <div class="search-bar">
+                <label class="visually-hidden" for="sermon-search">Search sermons</label>
+                <input type="search" id="sermon-search" placeholder="Search sermons by title, passage, or book…" autocomplete="off">
+                <div id="search-results" class="search-results" hidden></div>
+            </div>
+            <div id="library-browse">
             <div class="full-bar">
                 <a id="recent-link" data-loading="true" href="https://www.youtube.com/watch?v=SjPxZ2oi69g">
                     <div class="recent">
@@ -121,9 +127,90 @@
                 <div class="gr"><a href="sermons/revelation.html">Revelation</a></div>
             </div>
             </section>
+            </div>
         </main>
     </body>
     <footer>
         © 2025 Menez Ministries
     </footer>
+    <script>
+    (function () {
+        var input = document.getElementById('sermon-search');
+        var resultsEl = document.getElementById('search-results');
+        var browseEl = document.getElementById('library-browse');
+        if (!input || !resultsEl || !browseEl) return;
+
+        var bookNames = {};
+        Array.prototype.forEach.call(document.querySelectorAll('.gr a[href^="sermons/"]'), function (a) {
+            var slug = a.getAttribute('href').replace('sermons/', '').replace('.html', '');
+            bookNames[slug] = a.textContent.trim();
+        });
+
+        var index = [];
+        fetch('sermons-data.json')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                Object.keys(data).forEach(function (slug) {
+                    var bookName = bookNames[slug] || slug;
+                    (data[slug].sermons || []).forEach(function (sermon) {
+                        index.push({
+                            book: bookName,
+                            title: sermon.title || '',
+                            passage: sermon.passage || '',
+                            date: sermon.date || '',
+                            url: sermon.url,
+                        });
+                    });
+                });
+                if (input.value) renderResults(input.value);
+            })
+            .catch(function () { /* search stays disabled if the data can't load */ });
+
+        function escapeHTML(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            var date = new Date(dateStr + 'T00:00:00Z');
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+        }
+
+        function renderResults(query) {
+            var q = query.trim().toLowerCase();
+            if (!q) {
+                resultsEl.hidden = true;
+                resultsEl.innerHTML = '';
+                browseEl.hidden = false;
+                return;
+            }
+
+            browseEl.hidden = true;
+            resultsEl.hidden = false;
+
+            var matches = index.filter(function (item) {
+                return item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.passage.toLowerCase().indexOf(q) !== -1 ||
+                    item.book.toLowerCase().indexOf(q) !== -1;
+            });
+
+            if (!matches.length) {
+                resultsEl.innerHTML = '<p class="search-empty">No sermons match your search.</p>';
+                return;
+            }
+
+            resultsEl.innerHTML = matches.map(function (item) {
+                var meta = [item.passage || item.book, formatDate(item.date)].filter(Boolean).join(' &middot; ');
+                return '<a class="search-result" href="' + escapeHTML(item.url) + '">' +
+                    '<div class="search-result-title">' + escapeHTML(item.title) + '</div>' +
+                    '<div class="search-result-meta">' + meta + '</div>' +
+                    '</a>';
+            }).join('');
+        }
+
+        input.addEventListener('input', function () { renderResults(input.value); });
+    })();
+    </script>
 </html>

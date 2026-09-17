@@ -8,11 +8,14 @@ function normalizeString(value) {
 
 function parsePassageReference(passage) {
   if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
-  const match = passage.match(/(\d+)(?::(\d+))?/);
-  if (!match) return { chapter: Infinity, verse: Infinity };
+  // Match the chapter[:verse] anchored to the end of the reference (ignoring
+  // any trailing verse/chapter range), so a leading book number such as the
+  // "1" in "1 Corinthians" or "2 Timothy" is never mistaken for the chapter.
+  const match = passage.trim().match(/(\d+)(?::(\d+))?(?:[\u2013-]\d+(?::\d+)?)?\s*$/);
+  if (!match) return { chapter: 0, verse: 0 };
   return {
     chapter: Number(match[1]),
-    verse: match[2] ? Number(match[2]) : 1,
+    verse: match[2] ? Number(match[2]) : 0,
   };
 }
 
