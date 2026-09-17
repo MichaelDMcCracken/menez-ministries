@@ -154,17 +154,36 @@ The hosted dashboard calls server-side API routes that:
 
 ### Required environment variables
 
-- `GITHUB_TOKEN` — a GitHub App installation token or fine-grained token with
-  contents write access to this repository
-- `GITHUB_OWNER` — defaults to `MichaelDMcCracken`
-- `GITHUB_REPO` — defaults to `menez-ministries`
+Preferred GitHub App configuration for Vercel:
+
+- `GITHUB_APP_ID` — the App ID shown on the GitHub App's settings page
+- `GITHUB_APP_PRIVATE_KEY` — the full private key PEM generated for the App;
+  paste the entire key into Vercel. Escaped `\n` line breaks are supported.
+- `GITHUB_INSTALLATION_ID` — the installation ID for the App's installation on
+  your GitHub account for this repository. You can copy it from the installation
+  URL, such as `https://github.com/settings/installations/12345678`.
+- `GITHUB_OWNER` — optional; defaults to `MichaelDMcCracken`
+- `GITHUB_REPO` — optional; defaults to `menez-ministries`
 - `GITHUB_BRANCH` — optional; defaults to the repository's default branch
+
+Optional fallback for local or test deployments:
+
+- `GITHUB_TOKEN` — optional fallback token with contents write access. It is not
+  required when the GitHub App variables above are configured.
+
+To find those GitHub App values, open **Settings → Developer settings → GitHub
+Apps → your app**. Copy the **App ID** from the App settings page, generate or
+view the App's private key PEM for `GITHUB_APP_PRIVATE_KEY`, and copy the
+numeric installation ID from the App installation URL.
 
 ### Deployment notes
 
 - The existing Vercel project can keep using `admin/` as its root directory.
 - If you deploy the whole repository on Vercel instead, the hosted dashboard is
   available at `/admin/`.
+- When the GitHub App variables are set, the hosted admin mints fresh
+  installation access tokens automatically on the server before calling the
+  GitHub API.
 - The pastor only needs the deployed admin URL in a browser; no GitHub account,
   Git, Node, or CLI access is required.
 
