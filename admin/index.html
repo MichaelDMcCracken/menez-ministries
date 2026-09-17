@@ -347,14 +347,6 @@
                 return;
             }
 
-            function updatePassageInputAvailability() {
-                const disableSelectors = noPassageCheckbox.checked || (legacyPassageValue && keepLegacyPassageCheckbox.checked);
-                startChapterSelect.disabled = disableSelectors || !getSelectedBookMeta();
-                startVerseSelect.disabled = disableSelectors || !getSelectedBookMeta();
-                endChapterSelect.disabled = disableSelectors || !getSelectedBookMeta();
-                endVerseSelect.disabled = disableSelectors || !endChapterSelect.value || disableSelectors;
-            }
-
             const startChapter = Number(startChapterSelect.value || '1');
             const startVerse = Number(startVerseSelect.value || '1');
             const minVerse = endChapter === startChapter ? startVerse : 1;
@@ -370,6 +362,15 @@
             } else {
                 endVerseSelect.value = '';
             }
+        }
+
+        function updatePassageInputAvailability() {
+            const hasBookMetadata = Boolean(getSelectedBookMeta());
+            const disableSelectors = noPassageCheckbox.checked || (legacyPassageValue && keepLegacyPassageCheckbox.checked);
+            startChapterSelect.disabled = disableSelectors || !hasBookMetadata;
+            startVerseSelect.disabled = disableSelectors || !hasBookMetadata;
+            endChapterSelect.disabled = disableSelectors || !hasBookMetadata;
+            endVerseSelect.disabled = disableSelectors || !hasBookMetadata || !endChapterSelect.value;
         }
 
         function resetForm() {
@@ -642,9 +643,6 @@
 
             const { book, index } = found;
             workingData[book].sermons.splice(index, 1);
-            if (workingData[book].sermons.length === 0) {
-                delete workingData[book];
-            }
 
             if (editingSermonIdInput.value === sermonId) {
                 resetForm();
@@ -682,9 +680,6 @@
                 const found = findSermonById(editingId);
                 if (found) {
                     workingData[found.book].sermons.splice(found.index, 1);
-                    if (workingData[found.book].sermons.length === 0) {
-                        delete workingData[found.book];
-                    }
                 }
             }
 
