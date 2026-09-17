@@ -26,14 +26,22 @@ function createElement() {
   };
 }
 
-function loadAdminHooks() {
+function loadAdminScript() {
   const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
   const match = html.match(/<script[^>]*>([\s\S]*)<\/script>/i);
   if (!match) {
     throw new Error('Inline admin script not found');
   }
+  return match[1];
+}
 
+function loadAdminHooks() {
+  const { context } = loadAdminRuntime();
+  return context.window.__SERMON_ADMIN_TEST_HOOKS__;
+}
+
+function loadAdminRuntime() {
   const elements = new Map();
   const document = {
     getElementById(id) {
@@ -63,8 +71,8 @@ function loadAdminHooks() {
   };
 
   vm.createContext(context);
-  vm.runInContext(match[1], context);
-  return context.window.__SERMON_ADMIN_TEST_HOOKS__;
+  vm.runInContext(loadAdminScript(), context);
+  return { context, elements };
 }
 
 test('resolveStagedState restores when base signature matches', () => {
@@ -80,4 +88,22 @@ test('resolveStagedState discards when base signature differs', () => {
   const staged = { baseSignature: 'abc', workingData: { john: { sermons: [] } } };
   const result = hooks.resolveStagedState(staged, 'xyz');
   assert.equal(result.action, 'discard');
+});
+
+test('chapter and verse option labels are numeric-only', () => {
+  const { context, elements } = loadAdminRuntime();
+  elements.get('book').value = 'genesis';
+  context.renderChapterOptions();
+
+  assert.match(elements.get('start-chapter').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('start-chapter').innerHTML, />Chapter /);
+  assert.match(elements.get('start-verse').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('start-verse').innerHTML, />Verse /);
+  assert.match(elements.get('end-chapter').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('end-chapter').innerHTML, />Chapter /);
+
+  elements.get('end-chapter').value = '1';
+  context.updateEndVerseOptions();
+  assert.match(elements.get('end-verse').innerHTML, /<option value="1">1<\/option>/);
+  assert.doesNotMatch(elements.get('end-verse').innerHTML, />Verse /);
 });

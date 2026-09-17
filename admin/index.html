@@ -296,7 +296,7 @@
             const previousStartVerse = startVerseSelect.value;
             const previousEndChapter = endChapterSelect.value;
             const previousEndVerse = endVerseSelect.value;
-            startChapterSelect.innerHTML = chapters.map((_, index) => `<option value="${index + 1}">Chapter ${index + 1}</option>`).join('');
+            startChapterSelect.innerHTML = chapters.map((_, index) => `<option value="${index + 1}">${index + 1}</option>`).join('');
             if (!chapters.length) {
                 startChapterSelect.innerHTML = '<option value="">N/A</option>';
                 startVerseSelect.innerHTML = '<option value="">N/A</option>';
@@ -323,7 +323,7 @@
             const versesInChapter = book?.chapters?.[chapter - 1] || 1;
             const fallback = preferredStartVerse !== undefined ? preferredStartVerse : startVerseSelect.value;
             const previous = Number(fallback || '1');
-            startVerseSelect.innerHTML = Array.from({ length: versesInChapter }, (_, i) => `<option value="${i + 1}">Verse ${i + 1}</option>`).join('');
+            startVerseSelect.innerHTML = Array.from({ length: versesInChapter }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
             startVerseSelect.value = String(Math.min(previous, versesInChapter));
             updateEndChapterOptions(preferredEndChapter, preferredEndVerse);
         }
@@ -336,7 +336,7 @@
             const chapters = Array.isArray(book?.chapters) ? book.chapters : [];
             const options = ['<option value="">None</option>'];
             for (let chapter = startChapter; chapter <= chapters.length; chapter += 1) {
-                options.push(`<option value="${chapter}">Chapter ${chapter}</option>`);
+                options.push(`<option value="${chapter}">${chapter}</option>`);
             }
             endChapterSelect.innerHTML = options.join('');
             if (previous && Number(previous) >= startChapter && Number(previous) <= chapters.length) {
@@ -363,7 +363,7 @@
             const previous = Number(fallback || minVerse);
             endVerseSelect.innerHTML = ['<option value="">Select verse</option>', ...Array.from({ length: Math.max(versesInChapter - minVerse + 1, 0) }, (_, i) => {
                 const verse = minVerse + i;
-                return `<option value="${verse}">Verse ${verse}</option>`;
+                return `<option value="${verse}">${verse}</option>`;
             })].join('');
             endVerseSelect.disabled = false;
             if (previous >= minVerse && previous <= versesInChapter) {
