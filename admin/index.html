@@ -13,6 +13,7 @@
         .panel { margin-top: 24px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
         input, select { width: 100%; padding: 12px 14px; margin-bottom: 18px; border: 1px solid #c7cbd6; border-radius: 10px; font-size: 1rem; font-family: inherit; background: #fff; box-sizing: border-box; }
+        input[type="number"] { appearance: auto; }
         .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 18px; }
         .grid > div > label { margin-bottom: 6px; }
         .grid > div > select { margin-bottom: 0; }
@@ -42,6 +43,19 @@
         .small-note { color: #475569; font-size: 0.92rem; margin-top: -12px; margin-bottom: 16px; }
         .pending-group { margin-top: 12px; }
         .pending-group h3 { margin: 0 0 8px; font-size: 1rem; }
+        .passage-selector { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 16px; align-items: end; margin-bottom: 18px; }
+        .passage-selector label { margin-bottom: 8px; }
+        .passage-book select { margin-bottom: 0; min-height: 56px; font-size: 1.1rem; }
+        .passage-range { display: flex; align-items: center; gap: 10px; min-height: 56px; }
+        .passage-number { width: 96px; min-height: 56px; margin: 0; padding: 10px 12px; font-size: 1.35rem; text-align: center; }
+        .passage-colon { font-size: 1.35rem; }
+        .passage-through { font-size: 1.15rem; font-weight: 700; white-space: nowrap; }
+        .clear-range { width: 42px; height: 42px; padding: 0; border-radius: 50%; background: transparent; color: #ef4444; font-size: 2rem; line-height: 1; }
+        .clear-range:hover { background: #fef2f2; color: #dc2626; }
+        @media (max-width: 700px) {
+            .passage-selector { grid-template-columns: 1fr; gap: 8px; }
+            .passage-range { justify-content: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -54,38 +68,33 @@
         <form id="admin-form">
             <input id="editing-sermon-id" type="hidden">
 
-            <label for="book">Bible book</label>
-            <select id="book" name="book" required></select>
-
             <label for="subtitle">Book subtitle (optional)</label>
             <input id="subtitle" name="subtitle" placeholder="Optional subtitle for this book">
 
             <label for="title">Sermon title</label>
             <input id="title" name="title" required>
 
-            <label>Bible passage</label>
+            <label>Sermon Passage</label>
+            <div class="passage-selector">
+                <div class="passage-book">
+                    <label for="book">Bible book</label>
+                    <select id="book" name="book" required></select>
+                </div>
+                <div class="passage-range" aria-label="Passage range">
+                    <input id="start-chapter" class="passage-number" type="number" min="1" inputmode="numeric" aria-label="Start chapter" required>
+                    <span class="passage-colon" aria-hidden="true">:</span>
+                    <input id="start-verse" class="passage-number" type="number" min="1" inputmode="numeric" aria-label="Start verse" required>
+                    <span class="passage-through">thru</span>
+                    <input id="end-chapter" class="passage-number" type="number" min="1" inputmode="numeric" aria-label="End chapter">
+                    <span class="passage-colon" aria-hidden="true">:</span>
+                    <input id="end-verse" class="passage-number" type="number" min="1" inputmode="numeric" aria-label="End verse">
+                    <button type="button" id="clear-range" class="clear-range" aria-label="Clear end of passage" title="Clear end of passage">×</button>
+                </div>
+            </div>
             <label style="font-weight:500;">
                 <input id="no-passage" type="checkbox" style="width:auto; margin-right:8px; margin-bottom:0;">
                 No passage for this sermon
             </label>
-            <div class="grid">
-                <div>
-                    <label for="start-chapter">Start chapter</label>
-                    <select id="start-chapter" required></select>
-                </div>
-                <div>
-                    <label for="start-verse">Start verse</label>
-                    <select id="start-verse" required></select>
-                </div>
-                <div>
-                    <label for="end-chapter">End chapter (optional)</label>
-                    <select id="end-chapter"></select>
-                </div>
-                <div>
-                    <label for="end-verse">End verse (optional)</label>
-                    <select id="end-verse"></select>
-                </div>
-            </div>
             <div id="legacy-passage-wrap" class="small-note hidden">
                 <label style="font-weight:500; margin-bottom:6px;">
                     <input id="keep-legacy-passage" type="checkbox" checked style="width:auto; margin-right:8px; margin-bottom:0;">
@@ -133,6 +142,7 @@
         const startVerseSelect = document.getElementById('start-verse');
         const endChapterSelect = document.getElementById('end-chapter');
         const endVerseSelect = document.getElementById('end-verse');
+        const clearRangeButton = document.getElementById('clear-range');
         const subtitleInput = document.getElementById('subtitle');
         const titleInput = document.getElementById('title');
         const dateInput = document.getElementById('date');
@@ -296,12 +306,11 @@
             const previousStartVerse = startVerseSelect.value;
             const previousEndChapter = endChapterSelect.value;
             const previousEndVerse = endVerseSelect.value;
-            startChapterSelect.innerHTML = chapters.map((_, index) => `<option value="${index + 1}">${index + 1}</option>`).join('');
             if (!chapters.length) {
-                startChapterSelect.innerHTML = '<option value="">N/A</option>';
-                startVerseSelect.innerHTML = '<option value="">N/A</option>';
-                endChapterSelect.innerHTML = '<option value="">None</option>';
-                endVerseSelect.innerHTML = '<option value="">None</option>';
+                startChapterSelect.value = '';
+                startVerseSelect.value = '';
+                endChapterSelect.value = '';
+                endVerseSelect.value = '';
                 startChapterSelect.disabled = true;
                 startVerseSelect.disabled = true;
                 endChapterSelect.disabled = true;
@@ -311,9 +320,10 @@
             startChapterSelect.disabled = false;
             startVerseSelect.disabled = false;
             endChapterSelect.disabled = false;
-            if (previousStartChapter && Number(previousStartChapter) >= 1 && Number(previousStartChapter) <= chapters.length) {
-                startChapterSelect.value = previousStartChapter;
-            }
+            startChapterSelect.max = String(chapters.length);
+            startChapterSelect.value = previousStartChapter && Number(previousStartChapter) >= 1 && Number(previousStartChapter) <= chapters.length
+                ? previousStartChapter
+                : '1';
             updateStartVerseOptions(previousStartVerse, previousEndChapter, previousEndVerse);
         }
 
@@ -322,8 +332,9 @@
             const chapter = Number(startChapterSelect.value || '1');
             const versesInChapter = book?.chapters?.[chapter - 1] || 1;
             const fallback = preferredStartVerse !== undefined ? preferredStartVerse : startVerseSelect.value;
-            const previous = Number(fallback || '1');
-            startVerseSelect.innerHTML = Array.from({ length: versesInChapter }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+            const previousValue = Number(fallback || '1');
+            const previous = Number.isFinite(previousValue) && previousValue >= 1 ? previousValue : 1;
+            startVerseSelect.max = String(versesInChapter);
             startVerseSelect.value = String(Math.min(previous, versesInChapter));
             updateEndChapterOptions(preferredEndChapter, preferredEndVerse);
         }
@@ -334,13 +345,12 @@
             const fallback = preferredEndChapter !== undefined ? preferredEndChapter : endChapterSelect.value;
             const previous = fallback;
             const chapters = Array.isArray(book?.chapters) ? book.chapters : [];
-            const options = ['<option value="">None</option>'];
-            for (let chapter = startChapter; chapter <= chapters.length; chapter += 1) {
-                options.push(`<option value="${chapter}">${chapter}</option>`);
-            }
-            endChapterSelect.innerHTML = options.join('');
+            endChapterSelect.min = String(startChapter);
+            endChapterSelect.max = String(chapters.length);
             if (previous && Number(previous) >= startChapter && Number(previous) <= chapters.length) {
                 endChapterSelect.value = previous;
+            } else if (!previous || Number(previous) < startChapter || Number(previous) > chapters.length) {
+                endChapterSelect.value = '';
             }
             updateEndVerseOptions(preferredEndVerse);
         }
@@ -349,7 +359,6 @@
             const book = getSelectedBookMeta();
             const endChapter = Number(endChapterSelect.value || '0');
             if (!endChapter || !book) {
-                endVerseSelect.innerHTML = '<option value="">None</option>';
                 endVerseSelect.value = '';
                 endVerseSelect.disabled = true;
                 return;
@@ -360,11 +369,10 @@
             const minVerse = endChapter === startChapter ? startVerse : 1;
             const versesInChapter = book.chapters[endChapter - 1] || minVerse;
             const fallback = preferredEndVerse !== undefined ? preferredEndVerse : endVerseSelect.value;
-            const previous = Number(fallback || minVerse);
-            endVerseSelect.innerHTML = ['<option value="">Select verse</option>', ...Array.from({ length: Math.max(versesInChapter - minVerse + 1, 0) }, (_, i) => {
-                const verse = minVerse + i;
-                return `<option value="${verse}">${verse}</option>`;
-            })].join('');
+            const previousValue = Number(fallback || minVerse);
+            const previous = Number.isFinite(previousValue) && previousValue >= minVerse ? previousValue : minVerse;
+            endVerseSelect.min = String(minVerse);
+            endVerseSelect.max = String(versesInChapter);
             endVerseSelect.disabled = false;
             if (previous >= minVerse && previous <= versesInChapter) {
                 endVerseSelect.value = String(previous);
@@ -461,6 +469,9 @@
             if (!startChapter || !startVerse) {
                 throw new Error('Choose a start chapter and verse.');
             }
+            if (!meta.chapters[startChapter - 1] || startVerse > meta.chapters[startChapter - 1]) {
+                throw new Error('Choose a valid start chapter and verse.');
+            }
 
             const endChapterValue = endChapterSelect.value;
             const endVerseValue = endVerseSelect.value;
@@ -474,6 +485,9 @@
 
             const endChapter = Number(endChapterValue);
             const endVerse = Number(endVerseValue);
+            if (!meta.chapters[endChapter - 1] || endVerse > meta.chapters[endChapter - 1]) {
+                throw new Error('Choose a valid end chapter and verse.');
+            }
             if (endChapter < startChapter || (endChapter === startChapter && endVerse < startVerse)) {
                 throw new Error('End reference must come after the start reference.');
             }
@@ -804,6 +818,11 @@
         startChapterSelect.addEventListener('change', updateStartVerseOptions);
         startVerseSelect.addEventListener('change', updateEndVerseOptions);
         endChapterSelect.addEventListener('change', updateEndVerseOptions);
+        clearRangeButton.addEventListener('click', () => {
+            endChapterSelect.value = '';
+            endVerseSelect.value = '';
+            updatePassageInputAvailability();
+        });
         noPassageCheckbox.addEventListener('change', updatePassageInputAvailability);
         keepLegacyPassageCheckbox.addEventListener('change', updatePassageInputAvailability);
         publishButton.addEventListener('click', publishChanges);
