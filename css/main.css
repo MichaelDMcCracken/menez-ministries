@@ -431,6 +431,14 @@ footer {
     }
 }
 
+@media (max-width: 1000px) {
+    body {
+        background-image: url("../img/frm-cover-mobile.jpg");
+        background-position: 62% center;
+        background-attachment: scroll;
+    }
+}
+
 @media (max-width: 500px) {
     .banner h1 {
         font-size: 3.3rem;
