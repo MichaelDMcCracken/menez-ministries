@@ -139,6 +139,22 @@ function updateLibraryHTML(html, latestSermon) {
   return nextHtml;
 }
 
+function updateBookLinks(html, data) {
+  const booksByName = new Map(
+    Object.keys(data).map(book => [book.replace(/-/g, ' ').toLowerCase(), book]),
+  );
+
+  return html.replace(/(<div class="gr">)([\s\S]*?)(<\/div>)/g, (match, open, content, close) => {
+    const label = content.replace(/<[^>]*>/g, '').trim().toLowerCase();
+    const book = booksByName.get(label);
+    if (!book || /<a\b/i.test(content)) {
+      return match;
+    }
+
+    return `${open}<a href="sermons/${book}.html">${content.trim()}</a>${close}`;
+  });
+}
+
 function buildSiteFiles(data, libraryHtml) {
   const files = {};
 
@@ -147,7 +163,8 @@ function buildSiteFiles(data, libraryHtml) {
   }
 
   if (libraryHtml) {
-    files['library.html'] = updateLibraryHTML(libraryHtml, findLatestSermon(data));
+    const updatedLibrary = updateLibraryHTML(libraryHtml, findLatestSermon(data));
+    files['library.html'] = updateBookLinks(updatedLibrary, data);
   }
 
   return files;
