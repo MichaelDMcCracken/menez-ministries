@@ -143,16 +143,43 @@ function updateBookLinks(html, data) {
   const booksByName = new Map(
     Object.keys(data).map(book => [book.replace(/-/g, ' ').toLowerCase(), book]),
   );
+  const marker = '<div class="gr">';
+  const closingTag = '</div>';
+  const parts = [];
+  let cursor = 0;
 
-  return html.replace(/(<div class="gr">)([\s\S]*?)(<\/div>)/g, (match, open, content, close) => {
-    const label = content.replace(/<[^>]*>/g, '').trim().toLowerCase();
-    const book = booksByName.get(label);
-    if (!book || /<a\b/i.test(content)) {
-      return match;
+  while (cursor < html.length) {
+    const start = html.indexOf(marker, cursor);
+    if (start === -1) break;
+
+    const contentStart = start + marker.length;
+    const end = html.indexOf(closingTag, contentStart);
+    if (end === -1) break;
+
+    const content = html.slice(contentStart, end);
+    const book = content.includes('<')
+      ? undefined
+      : booksByName.get(content.trim().toLowerCase());
+
+    parts.push(html.slice(cursor, contentStart));
+    if (book) {
+      const label = content.trim().replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character]);
+      parts.push(`<a href="sermons/${encodeURIComponent(book)}.html">${label}</a>`);
+    } else {
+      parts.push(content);
     }
+    parts.push(closingTag);
+    cursor = end + closingTag.length;
+  }
 
-    return `${open}<a href="sermons/${book}.html">${content.trim()}</a>${close}`;
-  });
+  parts.push(html.slice(cursor));
+  return parts.join('');
 }
 
 function buildSiteFiles(data, libraryHtml) {
