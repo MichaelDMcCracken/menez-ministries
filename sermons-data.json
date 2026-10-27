@@ -4359,16 +4359,6 @@
       }
     ]
   },
-  "jeremiah": {
-    "sermons": [
-      {
-        "title": "Jesus Christ - The Plan of God",
-        "url": "https://vimeo.com/showcase/249505?share=copy&fl=sc&fe=fs",
-        "passage": "Jeremiah 29:11",
-        "date": "2013-06-23"
-      }
-    ]
-  },
   "hosea": {
     "sermons": [
       {
@@ -4376,6 +4366,16 @@
         "url": "https://vimeo.com/70297140",
         "passage": "Hosea 1:9–2:1",
         "date": "2013-07-14"
+      }
+    ]
+  },
+  "jeremiah": {
+    "sermons": [
+      {
+        "title": "Jesus Christ - The Plan of God",
+        "url": "https://vimeo.com/68963248",
+        "passage": "Jeremiah 29:11",
+        "date": "2013-06-23"
       }
     ]
   }
