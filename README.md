@@ -199,6 +199,13 @@ New sermon entries use the Bible-book dropdown flow. If older data already
 contains non-Bible slugs, they still appear in the working list and can be
 edited or deleted safely.
 
+## Sermon Data Backups
+
+On the first day of each month, a scheduled GitHub Actions workflow saves
+`sermons-data.json` as `backups/sermons-data-YYYY-MM.json`. Each monthly backup
+is committed to the repository and is not overwritten if the workflow runs
+again that month.
+
 ## Manual Build Commands
 
 If you need to run build commands from the terminal instead of using the admin page:
