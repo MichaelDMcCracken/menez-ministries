@@ -20,14 +20,32 @@ function normalizeTopics(topics) {
 
 function parsePassageReference(passage) {
   if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
-  // Match the chapter[:verse] anchored to the end of the reference (ignoring
-  // any trailing verse/chapter range), so a leading book number such as the
-  // "1" in "1 Corinthians" or "2 Timothy" is never mistaken for the chapter.
-  const match = passage.trim().match(/(\d+)(?::(\d+))?(?:[\u2013-]\d+(?::\d+)?)?\s*$/);
-  if (!match) return { chapter: 0, verse: 0 };
+  const words = passage.trim().split(/\s+/);
+  let reference = words[words.length - 1];
+  for (const delimiter of ['\u2013', '-']) {
+    const rangeStart = reference.indexOf(delimiter);
+    if (rangeStart !== -1) reference = reference.slice(0, rangeStart);
+  }
+
+  const colon = reference.indexOf(':');
+  if (colon !== -1 && colon !== reference.lastIndexOf(':')) return { chapter: 0, verse: 0 };
+  const chapterText = colon === -1 ? reference : reference.slice(0, colon);
+  const verseText = colon === -1 ? '' : reference.slice(colon + 1);
+  const parseNumber = value => {
+    if (!value) return null;
+    for (let index = 0; index < value.length; index += 1) {
+      const digit = value.charCodeAt(index) - 48;
+      if (digit < 0 || digit > 9) return null;
+    }
+    return Number(value);
+  };
+  const chapter = parseNumber(chapterText);
+  const verse = verseText ? parseNumber(verseText) : 0;
+  if (chapter === null || verse === null) return { chapter: 0, verse: 0 };
+
   return {
-    chapter: Number(match[1]),
-    verse: match[2] ? Number(match[2]) : 0,
+    chapter,
+    verse,
   };
 }
 
