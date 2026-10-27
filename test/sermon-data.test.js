@@ -1,7 +1,11 @@
 const assert = require('assert');
 const test = require('node:test');
 
-const { parsePassageReference, sortSermonsByReference, validateSermonDataset } = require('../lib/sermon-data');
+const sermonDataModules = [
+  require('../lib/sermon-data'),
+  require('../admin/lib/sermon-data'),
+];
+const { parsePassageReference, sortSermonsByReference, validateSermonDataset } = sermonDataModules[0];
 
 test('parsePassageReference ignores a leading book number like "1" or "2"', () => {
   assert.deepEqual(parsePassageReference('1 Corinthians 5:14–17'), { chapter: 5, verse: 14 });
@@ -66,4 +70,38 @@ test('validateSermonDataset requires sermon title and URL', () => {
     }),
     /requires title and URL/i,
   );
+});
+
+test('validateSermonDataset preserves normalized topic tags', () => {
+  for (const sermonData of sermonDataModules) {
+    const result = sermonData.validateSermonDataset({
+      john: {
+        sermons: [
+          { title: 'The Word', url: 'https://example.com', topics: [' Marriage ', 'parenting', 'marriage', ''] },
+        ],
+      },
+    });
+
+    assert.deepEqual(result.john.sermons[0].topics, ['Marriage', 'parenting']);
+  }
+});
+
+test('applySaveSermon saves topic tags and removes them when cleared', () => {
+  for (const sermonData of sermonDataModules) {
+    const data = {
+      john: {
+        sermons: [{ title: 'The Word', url: 'https://example.com', topics: ['Marriage'] }],
+      },
+    };
+    const updated = sermonData.applySaveSermon(data, {
+      book: 'john',
+      originalBook: 'john',
+      sermonIndex: 0,
+      title: 'The Word',
+      url: 'https://example.com',
+      topics: [],
+    });
+
+    assert.equal(updated.john.sermons[0].topics, undefined);
+  }
 });

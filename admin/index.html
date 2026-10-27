@@ -109,6 +109,11 @@
             <label for="url">Audio URL</label>
             <input id="url" name="url" type="url" placeholder="https://..." required>
 
+            <label for="topics">Topics (optional)</label>
+            <input id="topics" name="topics" list="available-topics" placeholder="Marriage, parenting">
+            <datalist id="available-topics"></datalist>
+            <p class="small-note">Separate topics with commas. New topics become available as suggestions after they are used.</p>
+
             <div class="action-row">
                 <button type="submit">Stage Changes</button>
                 <button type="button" id="cancel-edit" class="hidden">Cancel edit</button>
@@ -147,6 +152,8 @@
         const titleInput = document.getElementById('title');
         const dateInput = document.getElementById('date');
         const urlInput = document.getElementById('url');
+        const topicsInput = document.getElementById('topics');
+        const availableTopics = document.getElementById('available-topics');
         const editingSermonIdInput = document.getElementById('editing-sermon-id');
         const cancelEditButton = document.getElementById('cancel-edit');
         const keepLegacyPassageCheckbox = document.getElementById('keep-legacy-passage');
@@ -230,11 +237,37 @@
                         const entry = { title: String(sermon.title || '').trim(), url: String(sermon.url || '').trim() };
                         if (sermon.passage) entry.passage = String(sermon.passage).trim();
                         if (sermon.date) entry.date = String(sermon.date).trim();
+                        const topics = parseTopicInput(Array.isArray(sermon.topics) ? sermon.topics.join(', ') : '');
+                        if (topics.length) entry.topics = topics;
                         return entry;
                     })
                 };
             }
             return next;
+        }
+
+        function parseTopicInput(value) {
+            const seen = new Set();
+            return String(value || '').split(',').map(topic => topic.trim()).filter(topic => {
+                const key = topic.toLowerCase();
+                if (!topic || seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        function renderTopicSuggestions() {
+            const topics = new Map();
+            for (const bookData of Object.values(workingData)) {
+                for (const sermon of bookData.sermons || []) {
+                    for (const topic of Array.isArray(sermon.topics) ? sermon.topics : []) {
+                        const label = String(topic).trim();
+                        if (label && !topics.has(label.toLowerCase())) topics.set(label.toLowerCase(), label);
+                    }
+                }
+            }
+            availableTopics.innerHTML = [...topics.values()].sort((a, b) => a.localeCompare(b))
+                .map(topic => `<option value="${escapeHtml(topic)}"></option>`).join('');
         }
 
         function stableCloneForSignature(value) {
@@ -511,7 +544,8 @@
                 const sermons = sortSermonsByReference(bookData.sermons || []);
                 const subtitleHtml = bookData.subtitle ? `<div class="sermon-meta">${escapeHtml(bookData.subtitle)}</div>` : '';
                 const sermonsHtml = sermons.map(sermon => {
-                    const meta = [sermon.date, sermon.passage].filter(Boolean).map(escapeHtml).join(' • ');
+                    const meta = [sermon.date, sermon.passage, ...(Array.isArray(sermon.topics) ? sermon.topics : []).map(topic => `Topic: ${topic}`)]
+                        .filter(Boolean).map(escapeHtml).join(' • ');
                     return `
                         <div class="sermon-row">
                             <div class="sermon-info">
@@ -568,7 +602,9 @@
                     original.sermon.title !== current.sermon.title ||
                     original.sermon.url !== current.sermon.url ||
                     (original.sermon.date || '') !== (current.sermon.date || '') ||
-                    (original.sermon.passage || '') !== (current.sermon.passage || '')
+                    (original.sermon.passage || '') !== (current.sermon.passage || '') ||
+                    JSON.stringify(parseTopicInput(Array.isArray(original.sermon.topics) ? original.sermon.topics.join(', ') : '')) !==
+                        JSON.stringify(parseTopicInput(Array.isArray(current.sermon.topics) ? current.sermon.topics.join(', ') : ''))
                 ) {
                     edited.push({ title: current.sermon.title, book: current.book });
                 }
@@ -613,6 +649,7 @@
 
         function rerender() {
             renderBookOptions(bookSelect.value || 'genesis');
+            renderTopicSuggestions();
             renderSermonList();
             computePendingChanges();
             renderPendingChanges();
@@ -640,6 +677,7 @@
             titleInput.value = sermon.title || '';
             dateInput.value = sermon.date || '';
             urlInput.value = sermon.url || '';
+            topicsInput.value = Array.isArray(sermon.topics) ? sermon.topics.join(', ') : '';
             cancelEditButton.classList.remove('hidden');
 
             renderChapterOptions();
@@ -738,6 +776,8 @@
             const date = dateInput.value.trim();
             if (date) sermon.date = date;
             if (passage) sermon.passage = passage;
+            const topics = parseTopicInput(topicsInput.value);
+            if (topics.length) sermon.topics = topics;
             workingData[book].sermons.push(sermon);
             workingData[book].sermons = sortSermonsByReference(workingData[book].sermons);
 
@@ -860,6 +900,8 @@
 
         window.__SERMON_ADMIN_TEST_HOOKS__ = {
             resolveStagedState,
+            parseTopicInput,
+            sanitizeForPublish,
         };
 
         if (!window.__SERMON_ADMIN_DISABLE_AUTOLOAD__) {

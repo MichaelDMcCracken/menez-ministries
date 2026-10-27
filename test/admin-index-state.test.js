@@ -107,3 +107,21 @@ test('chapter and verse option labels are numeric-only', () => {
   assert.match(elements.get('end-verse').innerHTML, /<option value="1">1<\/option>/);
   assert.doesNotMatch(elements.get('end-verse').innerHTML, />Verse /);
 });
+
+test('admin topic input accepts new comma-separated tags and publishes them', () => {
+  const hooks = loadAdminHooks();
+
+  assert.deepEqual(Array.from(hooks.parseTopicInput(' Marriage, parenting, marriage, ')), ['Marriage', 'parenting']);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(hooks.sanitizeForPublish({
+      john: {
+        sermons: [{ title: 'The Word', url: 'https://example.com', topics: ['Marriage', 'Parenting'] }],
+      },
+    }))),
+    {
+      john: {
+        sermons: [{ title: 'The Word', url: 'https://example.com', topics: ['Marriage', 'Parenting'] }],
+      },
+    },
+  );
+});
