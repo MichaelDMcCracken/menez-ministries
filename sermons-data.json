@@ -4353,16 +4353,6 @@
       }
     ]
   },
-  "hosea": {
-    "sermons": [
-      {
-        "title": "God and His Prodigal Wife",
-        "url": "https://vimeo.com/showcase/249505?share=copy&fl=sc&fe=fs",
-        "passage": "Hosea 1:9–2:1",
-        "date": "2013-07-14"
-      }
-    ]
-  },
   "jeremiah": {
     "sermons": [
       {
@@ -4370,6 +4360,16 @@
         "url": "https://vimeo.com/showcase/249505?share=copy&fl=sc&fe=fs",
         "passage": "Jeremiah 29:11",
         "date": "2013-06-23"
+      }
+    ]
+  },
+  "hosea": {
+    "sermons": [
+      {
+        "title": "God and His Prodigal Wife",
+        "url": "https://vimeo.com/70297140",
+        "passage": "Hosea 1:9–2:1",
+        "date": "2013-07-14"
       }
     ]
   }
