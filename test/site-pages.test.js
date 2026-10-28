@@ -19,7 +19,7 @@ test('topical sermon links share the five-column book grid', () => {
   const css = fs.readFileSync(path.join(root, 'css', 'main.css'), 'utf8');
 
   assert.match(css, /\.fl\s*\{[^}]*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);/);
-  assert.match(css, /\.topic-links\s*\{\s*display:\s*contents;\s*\}/);
+  assert.doesNotMatch(css, /display:\s*contents/);
 });
 
 test('landing and sermon library styles use a mobile-friendly background', () => {

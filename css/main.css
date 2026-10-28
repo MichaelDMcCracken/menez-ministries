@@ -369,10 +369,6 @@ h2 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.topic-links {
-    display: contents;
-}
-
 .gr {
     align-items: center;
     background: var(--panel);
@@ -394,6 +390,13 @@ h2 {
     background: rgba(47, 38, 34, 0.82);
     border-color: var(--accent);
     transform: translateY(-2px);
+}
+
+.gr-catchall {
+    background: rgba(47, 38, 34, 0.45);
+    border-style: dashed;
+    border-color: var(--accent);
+    font-style: italic;
 }
 
 .gr a {
