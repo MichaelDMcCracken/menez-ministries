@@ -3388,7 +3388,10 @@
       {
         "title": "A Global Christmas",
         "url": "https://soundcloud.com/user-440517750/a-global-christmas",
-        "passage": "Matthew 1"
+        "passage": "Matthew 1",
+        "topics": [
+          "Christmas"
+        ]
       },
       {
         "title": "The Miracle that Gave Us Christmas",
@@ -3688,16 +3691,16 @@
   "philippians": {
     "sermons": [
       {
-        "title": "The Church and It's Joy-Giving Savior",
-        "url": "https://vimeo.com/110077384",
-        "passage": "Philippians 1:1–5",
-        "date": "2014-10-26"
-      },
-      {
         "title": "An Introduction to the Book of Philippians",
         "url": "https://vimeo.com/109388778",
         "passage": "Philippians 1:1",
         "date": "2014-10-19"
+      },
+      {
+        "title": "The Church and Its Joy-Giving Savior",
+        "url": "https://vimeo.com/110077384",
+        "passage": "Philippians 1:1–5",
+        "date": "2014-10-26"
       },
       {
         "title": "The Joy-Giving Gospel - Part 1",
@@ -3988,11 +3991,6 @@
         "passage": "Psalm 104"
       },
       {
-        "title": "The Heart of Worship",
-        "url": "https://soundcloud.com/user-440517750/the-heart-of-worship",
-        "passage": "Psalm 111"
-      },
-      {
         "title": "A Hallelujah Thanksgiving",
         "url": "https://soundcloud.com/user-440517750/a-hallelujah-thanksgiving",
         "passage": "Psalm 111"
@@ -4001,6 +3999,14 @@
         "title": "True Thanksgiving Flows from the Heart",
         "url": "https://youtu.be/N2qxVB7gIug?si=PETriU4kFUS61lS0",
         "passage": "Psalm 111"
+      },
+      {
+        "title": "The Heart of Worship",
+        "url": "https://soundcloud.com/user-440517750/the-heart-of-worship",
+        "passage": "Psalm 111",
+        "topics": [
+          "Worship"
+        ]
       },
       {
         "title": "Contentment in a Firestorm",
@@ -4278,11 +4284,6 @@
         "date": "2013-11-03"
       },
       {
-        "title": "How Shall We Worship?",
-        "url": "https://vimeo.com/68006891",
-        "date": "2013-06-09"
-      },
-      {
         "title": "The Infinite Value of the Glorified Resurrected Savior",
         "url": "https://vimeo.com/63052014",
         "date": "2013-03-31"
@@ -4293,11 +4294,6 @@
         "date": "2013-03-29"
       },
       {
-        "title": "5 Reasons Why Followers of Jesus Christ Love Christmas",
-        "url": "https://vimeo.com/58394682",
-        "date": "2012-12-23"
-      },
-      {
         "title": "A Special Prayer for Grace Bible Church",
         "url": "https://vimeo.com/24177167",
         "date": "2011-05-22"
@@ -4306,51 +4302,6 @@
         "title": "A Biblical Commitment to Church Governance and Leadership",
         "url": "https://vimeo.com/23223194",
         "date": "2011-05-01"
-      },
-      {
-        "title": "An Easter Resurrection Celebration",
-        "url": "https://vimeo.com/22918962",
-        "date": "2011-04-24"
-      },
-      {
-        "title": "Core Values of the Church - Introduction - Building on the Firm Foundation",
-        "url": "https://vimeo.com/40829147?fl=pl&fe=cm",
-        "date": "2012-04-22"
-      },
-      {
-        "title": "Core Values of the Church - Part 1",
-        "url": "https://vimeo.com/41262970?share=copy",
-        "date": "2012-04-29"
-      },
-      {
-        "title": "Core Values of the Church - Part 2A",
-        "url": "https://vimeo.com/42307458?fl=pl&fe=cm",
-        "date": "2012-05-13"
-      },
-      {
-        "title": "Core Values of the Church - Part 2B",
-        "url": "https://vimeo.com/42559685",
-        "date": "2012-05-20"
-      },
-      {
-        "title": "Core Values of the Church - Part 3",
-        "url": "https://vimeo.com/42943768",
-        "date": "2012-05-27"
-      },
-      {
-        "title": "Core Values of the Church - Part 4",
-        "url": "https://vimeo.com/43362799?fl=pl&fe=cm",
-        "date": "2012-06-03"
-      },
-      {
-        "title": "Core Values of the Church - Part 5",
-        "url": "https://vimeo.com/43880713?fl=pl&fe=cm",
-        "date": "2012-06-10"
-      },
-      {
-        "title": "Core Values of the Church - Part 6",
-        "url": "https://vimeo.com/44631435?fl=pl&fe=cm",
-        "date": "2012-06-24"
       },
       {
         "title": "How Shall We Worship?",
@@ -4371,6 +4322,94 @@
         "title": "It's Hard to Love Christ",
         "url": "https://vimeo.com/24694281",
         "date": "2011-06-05"
+      },
+      {
+        "title": "Core Values of the Church - Introduction - Building on the Firm Foundation",
+        "url": "https://vimeo.com/40829147?fl=pl&fe=cm",
+        "date": "2012-04-22",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 1",
+        "url": "https://vimeo.com/41262970?share=copy",
+        "date": "2012-04-29",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 2A",
+        "url": "https://vimeo.com/42307458?fl=pl&fe=cm",
+        "date": "2012-05-13",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 2B",
+        "url": "https://vimeo.com/42559685",
+        "date": "2012-05-20",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 3",
+        "url": "https://vimeo.com/42943768",
+        "date": "2012-05-27",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 4",
+        "url": "https://vimeo.com/43362799?fl=pl&fe=cm",
+        "date": "2012-06-03",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 5",
+        "url": "https://vimeo.com/43880713?fl=pl&fe=cm",
+        "date": "2012-06-10",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "Core Values of the Church - Part 6",
+        "url": "https://vimeo.com/44631435?fl=pl&fe=cm",
+        "date": "2012-06-24",
+        "topics": [
+          "Core Values of the Church"
+        ]
+      },
+      {
+        "title": "5 Reasons Why Followers of Jesus Christ Love Christmas",
+        "url": "https://vimeo.com/58394682",
+        "date": "2012-12-23",
+        "topics": [
+          "Christmas"
+        ]
+      },
+      {
+        "title": "An Easter Resurrection Celebration",
+        "url": "https://vimeo.com/22918962",
+        "date": "2011-04-24",
+        "topics": [
+          "Easter"
+        ]
+      },
+      {
+        "title": "How Shall We Worship?",
+        "url": "https://vimeo.com/68006891",
+        "date": "2013-06-09",
+        "topics": [
+          "Worship"
+        ]
       }
     ]
   },
