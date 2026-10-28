@@ -20,8 +20,17 @@ function escapeHTML(value) {
   })[character]);
 }
 
+function sortSermonsByDate(sermons = []) {
+  return [...sermons].sort((a, b) => {
+    if (!a.date || !b.date) return a.date ? -1 : b.date ? 1 : 0;
+    return a.date.localeCompare(b.date);
+  });
+}
+
 function generateBookHTML(book, bookData, options = {}) {
-  const sermons = sortSermonsByReference(bookData.sermons);
+  const sermons = options.sortByDate
+    ? sortSermonsByDate(bookData.sermons)
+    : sortSermonsByReference(bookData.sermons);
   const subtitle = bookData.subtitle;
   const bookTitle = options.heading || capitalize(book.replace(/-/g, ' '));
   const pageTitle = options.pageTitle || `Sermons from ${bookTitle}`;
@@ -253,7 +262,7 @@ function buildSiteFiles(data, libraryHtml) {
     files[path.posix.join('sermons', `topic-${slug}.html`)] = generateBookHTML(
       slug,
       { sermons },
-      { heading: label, pageTitle: `Sermons about ${label}` },
+      { heading: label, pageTitle: `Sermons about ${label}`, sortByDate: true },
     );
   }
 
