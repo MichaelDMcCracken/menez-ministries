@@ -15,6 +15,13 @@ test('sermon library exposes Various Passages under its topical heading', () => 
   assert.match(html, /<h2>Topical<\/h2>[\s\S]*?<a href="sermons\/various\.html">Various Passages<\/a>/);
 });
 
+test('topical sermon links share the five-column book grid', () => {
+  const css = fs.readFileSync(path.join(root, 'css', 'main.css'), 'utf8');
+
+  assert.match(css, /\.fl\s*\{[^}]*grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\);/);
+  assert.match(css, /\.topic-links\s*\{\s*display:\s*contents;\s*\}/);
+});
+
 test('landing and sermon library styles use a mobile-friendly background', () => {
   for (const stylesheet of ['cover.css', 'main.css']) {
     const css = fs.readFileSync(path.join(root, 'css', stylesheet), 'utf8');
