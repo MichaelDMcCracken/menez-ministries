@@ -13,8 +13,11 @@
         .panel { margin-top: 24px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
         input, select { width: 100%; padding: 12px 14px; margin-bottom: 18px; border: 1px solid #c7cbd6; border-radius: 10px; font-size: 1rem; font-family: inherit; background: #fff; box-sizing: border-box; }
-        #topics { color: #111; color-scheme: light; }
-        #available-topics option { background: #fff; color: #111; }
+        .topic-autocomplete { position: relative; }
+        .topic-suggestions { position: absolute; z-index: 10; top: calc(100% - 18px); left: 0; right: 0; display: grid; max-height: 220px; overflow-y: auto; margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid #c7cbd6; border-radius: 10px; box-shadow: 0 8px 20px rgba(18, 32, 60, 0.16); }
+        .topic-suggestions[hidden] { display: none; }
+        .topic-suggestions li { padding: 9px 10px; color: #111; cursor: pointer; }
+        .topic-suggestions li:hover, .topic-suggestions li[aria-selected="true"] { background: #e8edf5; color: #111; }
         input[type="number"] { appearance: auto; }
         .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 18px; }
         .grid > div > label { margin-bottom: 6px; }
@@ -112,8 +115,10 @@
             <input id="url" name="url" type="url" placeholder="https://..." required>
 
             <label for="topics">Topics (optional)</label>
-            <input id="topics" name="topics" list="available-topics" placeholder="Marriage, parenting">
-            <datalist id="available-topics"></datalist>
+            <div class="topic-autocomplete">
+                <input id="topics" name="topics" placeholder="Marriage, parenting" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="topic-suggestions" autocomplete="off">
+                <ul id="topic-suggestions" class="topic-suggestions" role="listbox" aria-label="Topic suggestions" hidden></ul>
+            </div>
             <p class="small-note">Separate topics with commas. New topics become available as suggestions after they are used.</p>
 
             <div class="action-row">
@@ -155,7 +160,7 @@
         const dateInput = document.getElementById('date');
         const urlInput = document.getElementById('url');
         const topicsInput = document.getElementById('topics');
-        const availableTopics = document.getElementById('available-topics');
+        const topicSuggestions = document.getElementById('topic-suggestions');
         const editingSermonIdInput = document.getElementById('editing-sermon-id');
         const cancelEditButton = document.getElementById('cancel-edit');
         const keepLegacyPassageCheckbox = document.getElementById('keep-legacy-passage');
@@ -173,6 +178,11 @@
         let pendingChanges = { added: [], edited: [], deleted: [], subtitleUpdated: [] };
         let nextId = 1;
         let legacyPassageValue = '';
+        let topicOptions = [];
+        let visibleTopicOptions = [];
+        let activeTopicOption = -1;
+        let topicTokenStart = 0;
+        let topicTokenEnd = 0;
 
         function deepClone(value) {
             return JSON.parse(JSON.stringify(value));
@@ -268,8 +278,74 @@
                     }
                 }
             }
-            availableTopics.innerHTML = [...topics.values()].sort((a, b) => a.localeCompare(b))
-                .map(topic => `<option value="${escapeHtml(topic)}"></option>`).join('');
+            topicOptions = [...topics.values()].sort((a, b) => a.localeCompare(b));
+            if (!topicSuggestions.hidden) updateTopicSuggestions();
+        }
+
+        function filterTopicSuggestions(topics, query) {
+            const normalizedQuery = String(query || '').trim().toLocaleLowerCase();
+            if (!normalizedQuery) return [];
+            return topics.filter(topic => topic.toLocaleLowerCase().startsWith(normalizedQuery) && topic.toLocaleLowerCase() !== normalizedQuery);
+        }
+
+        function setTopicSuggestionsVisible(visible) {
+            topicSuggestions.hidden = !visible;
+            topicsInput.setAttribute('aria-expanded', String(visible));
+            if (!visible) {
+                topicsInput.removeAttribute('aria-activedescendant');
+                activeTopicOption = -1;
+            }
+        }
+
+        function updateTopicSuggestions() {
+            const value = topicsInput.value;
+            const caret = topicsInput.selectionStart === null ? value.length : topicsInput.selectionStart;
+            const commaBeforeCaret = value.lastIndexOf(',', caret - 1);
+            topicTokenStart = commaBeforeCaret + 1;
+            topicTokenEnd = value.indexOf(',', caret);
+            if (topicTokenEnd < 0) topicTokenEnd = value.length;
+
+            const token = value.slice(topicTokenStart, caret);
+            const leadingWhitespace = token.match(/^\s*/)[0].length;
+            topicTokenStart += leadingWhitespace;
+            const query = token.trim().toLocaleLowerCase();
+            visibleTopicOptions = filterTopicSuggestions(topicOptions, query);
+            activeTopicOption = -1;
+            topicSuggestions.replaceChildren();
+
+            visibleTopicOptions.forEach((topic, index) => {
+                const option = document.createElement('li');
+                option.id = `topic-suggestion-${index}`;
+                option.setAttribute('role', 'option');
+                option.setAttribute('aria-selected', 'false');
+                option.dataset.topicIndex = String(index);
+                option.textContent = topic;
+                topicSuggestions.appendChild(option);
+            });
+            setTopicSuggestionsVisible(visibleTopicOptions.length > 0);
+        }
+
+        function setActiveTopicOption(index) {
+            activeTopicOption = (index + visibleTopicOptions.length) % visibleTopicOptions.length;
+            Array.from(topicSuggestions.querySelectorAll('[role="option"]')).forEach((option, optionIndex) => {
+                const selected = optionIndex === activeTopicOption;
+                option.setAttribute('aria-selected', String(selected));
+                if (selected) topicsInput.setAttribute('aria-activedescendant', option.id);
+            });
+        }
+
+        function selectTopicSuggestion(index) {
+            const topic = visibleTopicOptions[index];
+            if (!topic) return;
+            const value = topicsInput.value;
+            const hasFollowingTopic = topicTokenEnd < value.length;
+            const replacement = hasFollowingTopic ? topic : `${topic}, `;
+            topicsInput.value = value.slice(0, topicTokenStart) + replacement + value.slice(topicTokenEnd);
+            const caret = topicTokenStart + replacement.length;
+            topicsInput.setSelectionRange(caret, caret);
+            topicsInput.dispatchEvent(new Event('input', { bubbles: true }));
+            topicsInput.focus();
+            setTopicSuggestionsVisible(false);
         }
 
         function stableCloneForSignature(value) {
@@ -845,6 +921,30 @@
             stageFormChanges();
         });
 
+        topicsInput.addEventListener('input', updateTopicSuggestions);
+        topicsInput.addEventListener('focus', updateTopicSuggestions);
+        topicsInput.addEventListener('blur', () => setTimeout(() => setTopicSuggestionsVisible(false), 120));
+        topicsInput.addEventListener('keydown', event => {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                if (topicSuggestions.hidden) updateTopicSuggestions();
+                if (!visibleTopicOptions.length) return;
+                event.preventDefault();
+                const next = activeTopicOption + (event.key === 'ArrowDown' ? 1 : -1);
+                setActiveTopicOption(next < 0 ? visibleTopicOptions.length - 1 : next);
+            } else if (event.key === 'Enter' && !topicSuggestions.hidden && activeTopicOption >= 0) {
+                event.preventDefault();
+                selectTopicSuggestion(activeTopicOption);
+            } else if (event.key === 'Escape' && !topicSuggestions.hidden) {
+                event.preventDefault();
+                setTopicSuggestionsVisible(false);
+            }
+        });
+        topicSuggestions.addEventListener('mousedown', event => event.preventDefault());
+        topicSuggestions.addEventListener('click', event => {
+            const option = event.target.closest('[data-topic-index]');
+            if (option) selectTopicSuggestion(Number(option.dataset.topicIndex));
+        });
+
         cancelEditButton.addEventListener('click', event => {
             event.preventDefault();
             hideStatus();
@@ -903,6 +1003,7 @@
         window.__SERMON_ADMIN_TEST_HOOKS__ = {
             resolveStagedState,
             parseTopicInput,
+            filterTopicSuggestions,
             sanitizeForPublish,
         };
 

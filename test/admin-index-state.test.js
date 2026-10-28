@@ -126,10 +126,24 @@ test('admin topic input accepts new comma-separated tags and publishes them', ()
   );
 });
 
-test('admin topic suggestions use readable light colors', () => {
+test('admin topic suggestions use an accessible custom menu instead of a native datalist', () => {
   const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
 
-  assert.match(html, /#topics\s*\{\s*color:\s*#111;\s*color-scheme:\s*light;/);
-  assert.match(html, /#available-topics option\s*\{\s*background:\s*#fff;\s*color:\s*#111;/);
+  assert.match(html, /id="topics"[^>]*role="combobox"[^>]*aria-autocomplete="list"[^>]*aria-controls="topic-suggestions"/);
+  assert.match(html, /id="topic-suggestions" class="topic-suggestions" role="listbox"[^>]*hidden/);
+  assert.doesNotMatch(html, /<datalist\b/);
+  assert.match(html, /\.topic-suggestions\s*\{[^}]*background:\s*#fff;/);
+  assert.match(html, /\.topic-suggestions li\s*\{[^}]*color:\s*#111;/);
+});
+
+test('custom topic suggestions filter existing tags by the current prefix', () => {
+  const hooks = loadAdminHooks();
+
+  assert.deepEqual(
+    Array.from(hooks.filterTopicSuggestions(['Marriage', 'Parenting', 'Faith'], 'mar')),
+    ['Marriage'],
+  );
+  assert.deepEqual(Array.from(hooks.filterTopicSuggestions(['Marriage'], 'marriage')), []);
+  assert.deepEqual(Array.from(hooks.filterTopicSuggestions(['Marriage'], '')), []);
 });
