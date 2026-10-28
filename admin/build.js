@@ -30,7 +30,7 @@ function generateBookHTML(book, bookData, options = {}) {
 
   let tableRows = '';
   sermons.forEach(sermon => {
-    const passageCell = sermon.passage ? `<td>${sermon.passage}</td>` : '';
+    const passageCell = hasPassage ? `<td>${sermon.passage || ''}</td>` : '';
     const titleCell = `<td><a href="${sermon.url}">${sermon.title}</a></td>`;
     const dateCell = hasDate ? `<td class="date-cell">${sermon.date ? formatFullDate(sermon.date) : ''}</td>` : '';
     tableRows += `
