@@ -125,3 +125,11 @@ test('admin topic input accepts new comma-separated tags and publishes them', ()
     },
   );
 });
+
+test('admin topic suggestions use readable light colors', () => {
+  const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.match(html, /#topics\s*\{\s*color:\s*#111;\s*color-scheme:\s*light;/);
+  assert.match(html, /#available-topics option\s*\{\s*background:\s*#fff;\s*color:\s*#111;/);
+});
