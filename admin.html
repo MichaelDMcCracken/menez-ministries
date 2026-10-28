@@ -190,6 +190,10 @@
             <label for="url">Audio URL</label>
             <input id="url" name="url" type="url" placeholder="https://..." required>
 
+            <label for="topics">Topics (optional)</label>
+            <input id="topics" name="topics" placeholder="Marriage, parenting">
+            <p class="small-note">Separate topics with commas.</p>
+
             <label for="commit-message">Commit message (Build & Push only)</label>
             <input id="commit-message" name="commitMessage" placeholder="Default is current date">
 
@@ -394,6 +398,7 @@
             document.getElementById('passage').value = sermon.passage || '';
             document.getElementById('date').value = sermon.date || '';
             document.getElementById('url').value = sermon.url;
+            document.getElementById('topics').value = Array.isArray(sermon.topics) ? sermon.topics.join(', ') : '';
             originalBookInput.value = book;
             sermonIndexInput.value = index;
             cancelEditButton.style.display = 'inline-flex';
@@ -430,6 +435,7 @@
                 passage: document.getElementById('passage').value.trim(),
                 date: document.getElementById('date').value,
                 url: document.getElementById('url').value.trim(),
+                topics: document.getElementById('topics').value.split(',').map(topic => topic.trim()).filter(Boolean),
                 originalBook: originalBookInput.value || undefined,
                 sermonIndex: sermonIndexInput.value !== '' ? Number(sermonIndexInput.value) : undefined
             };

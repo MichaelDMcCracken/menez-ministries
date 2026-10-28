@@ -126,6 +126,15 @@ test('admin topic input accepts new comma-separated tags and publishes them', ()
   );
 });
 
+test('legacy admin page loads and saves comma-separated topic tags', () => {
+  const htmlPath = path.join(__dirname, '..', 'admin.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.match(html, /<label for="topics">Topics \(optional\)<\/label>\s*<input id="topics" name="topics"/);
+  assert.match(html, /document\.getElementById\('topics'\)\.value = Array\.isArray\(sermon\.topics\) \? sermon\.topics\.join\(', '\) : '';/);
+  assert.match(html, /topics: document\.getElementById\('topics'\)\.value\.split\(','\)\.map\(topic => topic\.trim\(\)\)\.filter\(Boolean\)/);
+});
+
 test('admin topic suggestions use an accessible custom menu instead of a native datalist', () => {
   const htmlPath = path.join(__dirname, '..', 'admin', 'index.html');
   const html = fs.readFileSync(htmlPath, 'utf8');
