@@ -284,7 +284,7 @@
 
         function filterTopicSuggestions(topics, query) {
             const normalizedQuery = String(query || '').trim().toLocaleLowerCase();
-            if (!normalizedQuery) return [];
+            if (!normalizedQuery) return topics;
             return topics.filter(topic => topic.toLocaleLowerCase().startsWith(normalizedQuery) && topic.toLocaleLowerCase() !== normalizedQuery);
         }
 
@@ -923,6 +923,7 @@
 
         topicsInput.addEventListener('input', updateTopicSuggestions);
         topicsInput.addEventListener('focus', updateTopicSuggestions);
+        topicsInput.addEventListener('click', updateTopicSuggestions);
         topicsInput.addEventListener('blur', () => setTimeout(() => setTopicSuggestionsVisible(false), 120));
         topicsInput.addEventListener('keydown', event => {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

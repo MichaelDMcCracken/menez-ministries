@@ -141,9 +141,16 @@ test('custom topic suggestions filter existing tags by the current prefix', () =
   const hooks = loadAdminHooks();
 
   assert.deepEqual(
+    Array.from(hooks.filterTopicSuggestions(['Marriage', 'Parenting', 'Faith'], '')),
+    ['Marriage', 'Parenting', 'Faith'],
+  );
+  assert.deepEqual(
+    Array.from(hooks.filterTopicSuggestions(['Marriage', 'Parenting', 'Faith'], '   ')),
+    ['Marriage', 'Parenting', 'Faith'],
+  );
+  assert.deepEqual(
     Array.from(hooks.filterTopicSuggestions(['Marriage', 'Parenting', 'Faith'], 'mar')),
     ['Marriage'],
   );
   assert.deepEqual(Array.from(hooks.filterTopicSuggestions(['Marriage'], 'marriage')), []);
-  assert.deepEqual(Array.from(hooks.filterTopicSuggestions(['Marriage'], '')), []);
 });
