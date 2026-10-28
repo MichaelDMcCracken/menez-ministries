@@ -12,7 +12,7 @@ test('Flat Rabbit Ministries landing-page card links to the ministry page', () =
 
 test('sermon library exposes Various Passages under its topical heading', () => {
   const html = fs.readFileSync(path.join(root, 'library.html'), 'utf8');
-  assert.match(html, /<h2>Topical<\/h2>[\s\S]*?<a href="sermons\/various\.html">Various Passages<\/a>/);
+  assert.match(html, /<h2>Topics &amp; Series<\/h2>[\s\S]*?<a href="sermons\/various\.html">Various Passages<\/a>/);
 });
 
 test('topical sermon links share the five-column book grid', () => {
