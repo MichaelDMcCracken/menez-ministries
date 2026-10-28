@@ -369,6 +369,10 @@ h2 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.topic-links {
+    display: contents;
+}
+
 .gr {
     align-items: center;
     background: var(--panel);
