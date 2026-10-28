@@ -6,16 +6,46 @@ function normalizeString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function normalizeTopics(topics) {
+  const seen = new Set();
+  return (Array.isArray(topics) ? topics : [])
+    .map(normalizeString)
+    .filter(topic => {
+      const key = topic.toLowerCase();
+      if (!topic || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 function parsePassageReference(passage) {
   if (!passage || typeof passage !== 'string') return { chapter: Infinity, verse: Infinity };
-  // Match the chapter[:verse] anchored to the end of the reference (ignoring
-  // any trailing verse/chapter range), so a leading book number such as the
-  // "1" in "1 Corinthians" or "2 Timothy" is never mistaken for the chapter.
-  const match = passage.trim().match(/(\d+)(?::(\d+))?(?:[\u2013-]\d+(?::\d+)?)?\s*$/);
-  if (!match) return { chapter: 0, verse: 0 };
+  const words = passage.trim().split(/\s+/);
+  let reference = words[words.length - 1];
+  for (const delimiter of ['\u2013', '-']) {
+    const rangeStart = reference.indexOf(delimiter);
+    if (rangeStart !== -1) reference = reference.slice(0, rangeStart);
+  }
+
+  const colon = reference.indexOf(':');
+  if (colon !== -1 && colon !== reference.lastIndexOf(':')) return { chapter: 0, verse: 0 };
+  const chapterText = colon === -1 ? reference : reference.slice(0, colon);
+  const verseText = colon === -1 ? '' : reference.slice(colon + 1);
+  const parseNumber = value => {
+    if (!value) return null;
+    for (let index = 0; index < value.length; index += 1) {
+      const digit = value.charCodeAt(index) - 48;
+      if (digit < 0 || digit > 9) return null;
+    }
+    return Number(value);
+  };
+  const chapter = parseNumber(chapterText);
+  const verse = verseText ? parseNumber(verseText) : 0;
+  if (chapter === null || verse === null) return { chapter: 0, verse: 0 };
+
   return {
-    chapter: Number(match[1]),
-    verse: match[2] ? Number(match[2]) : 0,
+    chapter,
+    verse,
   };
 }
 
@@ -40,6 +70,7 @@ function applySaveSermon(data, payload) {
   const subtitle = normalizeString(payload.subtitle);
   const passage = normalizeString(payload.passage);
   const date = normalizeString(payload.date);
+  const topics = normalizeTopics(payload.topics);
   const originalBook = normalizeString(payload.originalBook);
   const sermonIndex = Number.isFinite(payload.sermonIndex)
     ? Number(payload.sermonIndex)
@@ -56,6 +87,7 @@ function applySaveSermon(data, payload) {
   const sermonEntry = { title, url };
   if (passage) sermonEntry.passage = passage;
   if (date) sermonEntry.date = date;
+  if (topics.length) sermonEntry.topics = topics;
 
   if (originalBook && Number.isInteger(sermonIndex) && nextData[originalBook] && nextData[originalBook].sermons[sermonIndex]) {
     if (originalBook === bookSlug) {
@@ -106,7 +138,7 @@ function computeAddedAndUpdated(currentData, baseData) {
 
     if (!baseBook) {
       (currentBook.sermons || []).forEach(sermon => {
-        added.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', url: sermon.url });
+        added.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', topics: normalizeTopics(sermon.topics), url: sermon.url });
       });
       continue;
     }
@@ -115,16 +147,17 @@ function computeAddedAndUpdated(currentData, baseData) {
     (currentBook.sermons || []).forEach((sermon, index) => {
       const baseSermon = baseSermons[index];
       if (!baseSermon) {
-        added.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', url: sermon.url });
+        added.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', topics: normalizeTopics(sermon.topics), url: sermon.url });
         return;
       }
       if (
         sermon.title !== baseSermon.title ||
         sermon.url !== baseSermon.url ||
         sermon.date !== baseSermon.date ||
-        sermon.passage !== baseSermon.passage
+        sermon.passage !== baseSermon.passage ||
+        JSON.stringify(normalizeTopics(sermon.topics)) !== JSON.stringify(normalizeTopics(baseSermon.topics))
       ) {
-        updated.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', url: sermon.url });
+        updated.push({ book, title: sermon.title, date: sermon.date || '', passage: sermon.passage || '', topics: normalizeTopics(sermon.topics), url: sermon.url });
       }
     });
   }
@@ -191,8 +224,13 @@ function validateSermonDataset(data) {
       const sermon = { title, url };
       const passage = normalizeString(rawSermon.passage);
       const date = normalizeString(rawSermon.date);
+      if (rawSermon.topics !== undefined && !Array.isArray(rawSermon.topics)) {
+        throw new Error(`Topics for sermon ${index + 1} in "${book}" must be a list.`);
+      }
+      const topics = normalizeTopics(rawSermon.topics);
       if (passage) sermon.passage = passage;
       if (date) sermon.date = date;
+      if (topics.length) sermon.topics = topics;
       return sermon;
     });
 
@@ -209,6 +247,7 @@ module.exports = {
   computeAddedAndUpdated,
   findLatestSermon,
   normalizeString,
+  normalizeTopics,
   parsePassageReference,
   sortSermonsByReference,
   validateSermonDataset,

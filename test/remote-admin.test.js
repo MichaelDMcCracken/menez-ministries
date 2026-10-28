@@ -1,7 +1,11 @@
 const assert = require('assert');
 const test = require('node:test');
 
-const { publishChangesRemotely } = require('../lib/remote-admin');
+const remoteAdminModules = [
+  require('../lib/remote-admin'),
+  require('../admin/lib/remote-admin'),
+];
+const { publishChangesRemotely } = remoteAdminModules[0];
 
 test('publishChangesRemotely validates and commits staged dataset in one operation', async () => {
   const calls = [];
@@ -85,4 +89,35 @@ test('publishChangesRemotely uses default commit message when omitted', async ()
     committedMessage,
     /^Publish staged sermon changes \(\d{4}-\d{2}-\d{2}\)$/,
   );
+});
+
+test('publishChangesRemotely preserves topic tags and generates topical pages', async () => {
+  for (const remoteAdmin of remoteAdminModules) {
+    let committedFiles;
+    const publisher = {
+      async getFileText(filePath) {
+        if (filePath === 'sermons-data.json') return JSON.stringify({ john: { sermons: [] } });
+        if (filePath === 'library.html') return '<div class="topic-links"><!-- TOPICS_START --><!-- TOPICS_END --></div>';
+        throw new Error('Unexpected file');
+      },
+      async commitFiles(files) {
+        committedFiles = files;
+        return { changed: true };
+      },
+    };
+
+    await remoteAdmin.publishChangesRemotely(publisher, {
+      data: {
+        john: {
+          sermons: [
+            { title: 'The Word', url: 'https://example.com/word', topics: ['Marriage'] },
+          ],
+        },
+      },
+    });
+
+    assert.match(committedFiles['sermons-data.json'], /"topics": \[\s*"Marriage"/);
+    assert.match(committedFiles['sermons/topic-marriage.html'], /Sermons about Marriage/);
+    assert.match(committedFiles['library.html'], /sermons\/topic-marriage\.html">Marriage<\/a>/);
+  }
 });

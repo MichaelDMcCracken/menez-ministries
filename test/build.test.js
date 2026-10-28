@@ -50,3 +50,59 @@ test('buildSiteFiles links books with sermons in the library', () => {
     assert.match(files['library.html'], /<div class="gr">Hebrews<\/div>/);
   }
 });
+
+test('buildSiteFiles generates topical sermon pages and library links', () => {
+  const data = {
+    john: {
+      sermons: [
+        { title: 'The Word', url: 'https://example.com/word', passage: 'John 1:1', topics: ['Faith', 'Marriage'] },
+      ],
+    },
+    various: {
+      sermons: [
+        { title: 'A General Message', url: 'https://example.com/general', topics: ['faith'] },
+      ],
+    },
+  };
+  const libraryHtml = '<div class="gr">Various</div><div class="topic-links"><!-- TOPICS_START --><!-- TOPICS_END --></div>';
+
+  for (const builder of builders) {
+    const files = builder.buildSiteFiles(data, libraryHtml);
+    assert.match(files['library.html'], /sermons\/various\.html">Various<\/a>/);
+    assert.match(files['library.html'], /sermons\/topic-faith\.html">Faith<\/a>/);
+    assert.match(files['library.html'], /sermons\/topic-marriage\.html">Marriage<\/a>/);
+    assert.match(files['sermons/topic-faith.html'], /Sermons about Faith/);
+    assert.match(files['sermons/topic-faith.html'], /The Word/);
+    assert.match(files['sermons/topic-faith.html'], /A General Message/);
+  }
+});
+
+test('buildSiteFiles escapes topic labels and disambiguates matching slugs', () => {
+  const data = {
+    john: {
+      sermons: [
+        { title: 'One', url: 'https://example.com/1', topics: ['Faith & Hope', 'Faith Hope'] },
+      ],
+    },
+  };
+  const files = builders[0].buildSiteFiles(
+    data,
+    '<div class="topic-links"><!-- TOPICS_START --><!-- TOPICS_END --></div>',
+  );
+
+  assert.ok(files['sermons/topic-faith-hope.html']);
+  assert.ok(files['sermons/topic-faith-hope-2.html']);
+  assert.match(files['library.html'], /Faith &amp; Hope/);
+});
+
+test('buildSiteFiles replaces stale topical links on subsequent builds', () => {
+  const firstBuild = builders[0].buildSiteFiles({
+    john: { sermons: [{ title: 'The Word', url: 'https://example.com', topics: ['Marriage'] }] },
+  }, '<div class="topic-links"><!-- TOPICS_START --><!-- TOPICS_END --></div>');
+  const secondBuild = builders[0].buildSiteFiles({
+    john: { sermons: [{ title: 'The Word', url: 'https://example.com', topics: ['Parenting'] }] },
+  }, firstBuild['library.html']);
+
+  assert.doesNotMatch(secondBuild['library.html'], /topic-marriage/);
+  assert.match(secondBuild['library.html'], /topic-parenting/);
+});

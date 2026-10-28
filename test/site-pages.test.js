@@ -10,6 +10,11 @@ test('Flat Rabbit Ministries landing-page card links to the ministry page', () =
   assert.match(html, /<a href="ministry\.html">\s*<div class="card">[\s\S]*?<h2>Flat Rabbit Ministries<\/h2>/);
 });
 
+test('sermon library exposes Various Passages under its topical heading', () => {
+  const html = fs.readFileSync(path.join(root, 'library.html'), 'utf8');
+  assert.match(html, /<h2>Topical<\/h2>[\s\S]*?<a href="sermons\/various\.html">Various Passages<\/a>/);
+});
+
 test('landing and sermon library styles use a mobile-friendly background', () => {
   for (const stylesheet of ['cover.css', 'main.css']) {
     const css = fs.readFileSync(path.join(root, 'css', stylesheet), 'utf8');

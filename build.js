@@ -10,11 +10,21 @@ function capitalize(str) {
   return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-function generateBookHTML(book, bookData) {
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+}
+
+function generateBookHTML(book, bookData, options = {}) {
   const sermons = sortSermonsByReference(bookData.sermons);
   const subtitle = bookData.subtitle;
-  const bookTitle = capitalize(book.replace(/-/g, ' '));
-  const pageTitle = `Sermons from ${bookTitle}`;
+  const bookTitle = options.heading || capitalize(book.replace(/-/g, ' '));
+  const pageTitle = options.pageTitle || `Sermons from ${bookTitle}`;
   const hasPassage = sermons.some(s => s.passage);
   const hasDate = sermons.some(s => s.date);
 
@@ -37,7 +47,7 @@ function generateBookHTML(book, bookData) {
 <html lang="en">
 
 <head>
-    <title>${pageTitle}</title>
+    <title>${escapeHTML(pageTitle)}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/main.css">
@@ -54,7 +64,7 @@ function generateBookHTML(book, bookData) {
         </div>
     </a>
     <main>
-        <h1>${pageTitle}</h1>
+        <h1>${escapeHTML(pageTitle)}</h1>
         <div id="subtitle-area">${subtitleHTML}</div>
         <hr>
         <div id="sermon-list">
@@ -182,6 +192,49 @@ function updateBookLinks(html, data) {
   return parts.join('');
 }
 
+function getTopicEntries(data) {
+  const topicLabels = new Map();
+  for (const bookData of Object.values(data)) {
+    for (const sermon of bookData.sermons || []) {
+      for (const topic of Array.isArray(sermon.topics) ? sermon.topics : []) {
+        const label = typeof topic === 'string' ? topic.trim() : '';
+        if (label && !topicLabels.has(label.toLowerCase())) {
+          topicLabels.set(label.toLowerCase(), label);
+        }
+      }
+    }
+  }
+
+  const usedSlugs = new Set();
+  return [...topicLabels.values()].sort((a, b) => a.localeCompare(b)).map(label => {
+    const baseSlug = label.toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'topic';
+    let slug = baseSlug;
+    let suffix = 2;
+    while (usedSlugs.has(slug)) {
+      slug = `${baseSlug}-${suffix++}`;
+    }
+    usedSlugs.add(slug);
+    return { label, slug };
+  });
+}
+
+function updateTopicLinks(html, topicEntries) {
+  const startMarker = '<!-- TOPICS_START -->';
+  const endMarker = '<!-- TOPICS_END -->';
+  const start = html.indexOf(startMarker);
+  const end = html.indexOf(endMarker, start + startMarker.length);
+  if (start === -1 || end === -1) return html;
+  const links = topicEntries.map(({ label, slug }) =>
+    `<div class="gr"><a href="sermons/topic-${slug}.html">${escapeHTML(label)}</a></div>`,
+  ).join('\n                ');
+  const contentStart = start + startMarker.length;
+  return html.slice(0, contentStart) + links + html.slice(end);
+}
+
 function buildSiteFiles(data, libraryHtml) {
   const files = {};
 
@@ -189,9 +242,24 @@ function buildSiteFiles(data, libraryHtml) {
     files[path.posix.join('sermons', `${book}.html`)] = generateBookHTML(book, data[book]);
   }
 
+  const topicEntries = getTopicEntries(data);
+  for (const { label, slug } of topicEntries) {
+    const sermons = Object.values(data).flatMap(bookData =>
+      (bookData.sermons || []).filter(sermon =>
+        (Array.isArray(sermon.topics) ? sermon.topics : [])
+          .some(topic => typeof topic === 'string' && topic.trim().toLowerCase() === label.toLowerCase()),
+      ),
+    );
+    files[path.posix.join('sermons', `topic-${slug}.html`)] = generateBookHTML(
+      slug,
+      { sermons },
+      { heading: label, pageTitle: `Sermons about ${label}` },
+    );
+  }
+
   if (libraryHtml) {
     const updatedLibrary = updateLibraryHTML(libraryHtml, findLatestSermon(data));
-    files['library.html'] = updateBookLinks(updatedLibrary, data);
+    files['library.html'] = updateTopicLinks(updateBookLinks(updatedLibrary, data), topicEntries);
   }
 
   return files;
@@ -227,6 +295,7 @@ module.exports = {
   formatDate,
   formatFullDate,
   generateBookHTML,
+  getTopicEntries,
   runBuild,
   updateLibraryHTML,
 };

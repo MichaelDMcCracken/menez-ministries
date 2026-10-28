@@ -127,6 +127,16 @@
                 <div class="gr"><a href="sermons/revelation.html">Revelation</a></div>
             </div>
             </section>
+            <section class="testament">
+            <div class="section-heading">
+                <p class="section-label">Browse by subject</p>
+                <h2>Topical</h2>
+            </div>
+            <div class="fl">
+                <div class="gr"><a href="sermons/various.html">Various Passages</a></div>
+                <div class="topic-links"><!-- TOPICS_START --><!-- TOPICS_END --></div>
+            </div>
+            </section>
             </div>
         </main>
     </body>
@@ -158,6 +168,7 @@
                             title: sermon.title || '',
                             passage: sermon.passage || '',
                             date: sermon.date || '',
+                            topics: (sermon.topics || []).join(' '),
                             url: sermon.url,
                         });
                     });
@@ -193,7 +204,8 @@
             var matches = index.filter(function (item) {
                 return item.title.toLowerCase().indexOf(q) !== -1 ||
                     item.passage.toLowerCase().indexOf(q) !== -1 ||
-                    item.book.toLowerCase().indexOf(q) !== -1;
+                    item.book.toLowerCase().indexOf(q) !== -1 ||
+                    item.topics.toLowerCase().indexOf(q) !== -1;
             });
 
             if (!matches.length) {
